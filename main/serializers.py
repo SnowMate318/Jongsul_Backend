@@ -32,7 +32,7 @@ class SharedWithTagSerializer(serializers.ModelSerializer):
     shared_tag = SharedTagSerializer(many=True)
     class Meta:
         model = Shared
-        fields = ('id', 'user', 'shared_title', 'shared_content', 'shared_upload_datetime', 'shared_upload_datetime','shared_tag')
+        fields = ('id', 'user', 'shared_title', 'shared_content', 'shared_upload_datetime', 'shared_upload_datetime','shared_tags')
 
 class LibrarySerializer(serializers.ModelSerializer):
     
@@ -60,5 +60,5 @@ class ChoiceSerializer(serializers.ModelSerializer):
         
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = UploadedImage
+        model = Image
         fields = ('image',)

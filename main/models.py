@@ -123,8 +123,9 @@ class Question(models.Model):
     question_answer = models.CharField(max_length=100)
     question_explaination = models.CharField(max_length=2000)
     question_type = models.IntegerField()
+    last_solveed = models.BooleanField(blank=True)
     is_scrapped = models.BooleanField(default=False)
-
+    
     class Meta:
         db_table = 'question'
     
@@ -136,49 +137,10 @@ class Choice(models.Model):
 class Image(models.Model):
     image_url = models.ImageField(upload_to='images/')
     created_at = models.DateTimeField(auto_now_add=True)
-
+    user = models.ForeignKey(User, related_name="image", on_delete=models.SET_NULL, null=True)
     def __str__(self):
         return f"Image {self.pk} uploaded on {self.created_at}" # 관리자페이지, 디버깅에 사용
     
-#유저 정보 테이블
-# class ServiceUser(models.Model):
-#     user_id = models.CharField(max_length=100, primary_key=True)
-#     user_name = models.CharField(null=False, max_length=30)
-#     #이메일과 비밀번호
-#     profile = models.URLField(max_length=200, null=True)
-#     #올린 문제? 아니면 라이브러리?
-    
-#     class Meta: 
-#         #app_label = 'ulifeapp'
-#         db_table = 'serviceuser'
-
-
-# #태그 정보 테이블
-# class UserTag(models.Model):
-#     user = models.ForeignKey(ServiceUser, on_delete=models.CASCADE)
-#     #user_tag_id = models.AutoField(primary_key=True)
-#     user_tag_name = models.CharField(max_length=30, null=False)
-#     #태그정보: 최대 30자
-#     class Meta:
-#         db_table = 'usertag'
-
-# class Tag(models.Model):
-#     tag_name = models.CharField(max_length=30)
-#     class Meta:
-#         db_table = 'tag'    
-
-# class Search(models.Model):
-#     user_id = models.ForeignKey(User, related_name='user', on_delete=models.CASCADE)
-#     shared_id = models.ForeignKey(Shared, related_name='search', on_delete=models.CASCADE)
-#     shared_name = models.CharField(max_length=50, null=True)
-#     shared_content = models.CharField(null=True)
-#     shared_user_name = models.CharField(max_length=30, null=True)  
-#     search_tag = models.CharField(max_length=30, null=True)
-
-#     class Meta:
-#         unique_together = ('user_id', 'shared_id')
-#         managed = False
-#         db_table = 'search'
 
 
         
