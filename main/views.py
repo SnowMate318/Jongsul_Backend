@@ -14,9 +14,9 @@ import jwt
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 from django.contrib.auth import authenticate
 from django.shortcuts import render, get_object_or_404
-from rest_framework.permissions import IsAuthenticated  # 인증된 사용자만 접근 허용
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly  # 인증된 사용자만 접근 허용
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
-
+from rest_framework_simplejwt.tokens import AccessToken
 # /register/, post(회원가입)
 class RegisterAPIView(views.APIView):
     def post(self, request):
@@ -236,30 +236,70 @@ class SharedDetailAPIView(views.APIView):
         shared.save()
         return Response({"message": "Shared successfully marked as deleted."}, status=status.HTTP_200_OK)     
 
-# /library/ 뷰셋 활용    
-class LibraryViewSet(viewsets.ModelViewSet):
-    serializer_class = LibrarySerializer    
+# /library/ post(라이브러리 생성), get(전체 라이브러리 조회)
+class LibraryAPIView(views.APIView):
     permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        #인증된 사용자의 Library 객체 반환
-        user = self.request.user
-        return Library.objects.filter(user=user, is_deleted=False)
-    
-    def destroy(self, request, *args, **kwargs):
-        user = self.request.user
-        library_id = kwargs.get('pk')
+    def post(self, request):
+        title = request.data.get("title")
+        user = request.user
+        
+        library = Library.objects.create(user=user, title=title)
+        return Response({'message': '새로운 라이브러리가 생성되었습니다'},status=status.HTTP_201_CREATED)
+    def get(self, request):
+        user = request.user
+        libraries = Library.objects.filter(user=user, is_deleted=False)    
+        serializer = LibrarySerializer(many=True)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class LibraryDetailAPIView(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, library_id):
+        user = request.user
         library = get_object_or_404(Library, id=library_id)
-        directories = Directory.objects.filter(user=user, library=library)
-        for directory in directories:
-            directory.is_deleted=True
-            directory.save()
-            
-        library.is_deleted=True
+        serializer = LibrarySerializer()
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    def patch(self, request, library_id):
+        user = request.user
+        title = request.data.get(title)
+        library = get_object_or_404(Library, id=library_id)
+        library.title = title
         library.save()
         
-        return Response({"message": "라이브러리 삭제가 완료되었습니다", }, status=status.HTTP_204_NO_CONTENT)
+        return Response({'message':'라이브러리 제목이 수정되었습니다'},status=status.HTTP_200_OK)
+    def delete(self, request, library_id):
+        user = request.user
+        title = request.data.get(title)
+        library = get_object_or_404(Library, id=library_id)
+        library.is_deleted = true
+        library.save()
         
+        return Response({'message':'라이브러리 삭제가 수정되었습니다'},status=status.HTTP_200_OK)
+# /library/ 뷰셋 활용    
+# class LibraryViewSet(viewsets.ModelViewSet):
+#     serializer_class = LibrarySerializer    
+#     permission_classes = [IsAuthenticatedOrReadOnly]
+    
+#     def get_queryset(self, request):
+#         #인증된 사용자의 Library 객체 반환
+#         user = request.user
+#         return Library.objects.filter(user=user, is_deleted=False)
+    
+#     def destroy(self, request, *args, **kwargs):
+#         with transaction.atomic():
+#             user = request.user
+#             library_id = kwargs.get('pk')
+#             library = get_object_or_404(Library, id=library_id)
+#             directories = Directory.objects.filter(user=user, library=library)
+#             for directory in directories:
+#                 directory.is_deleted=True
+#                 directory.save()
+                
+#             library.is_deleted=True
+#             library.save()
+            
+#             return Response({"message": "라이브러리 삭제가 완료되었습니다", }, status=status.HTTP_204_NO_CONTENT)
     
 #없는걸 만들어낼 수 있냐? -> put
 #있는것만 건들거냐? -> patch

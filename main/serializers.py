@@ -36,9 +36,12 @@ class SharedWithTagSerializer(serializers.ModelSerializer):
 
 class LibrarySerializer(serializers.ModelSerializer):
     
+    user = UserSerializer(read_only=True)
     class Meta:
         model = Library
         fields = ('user', 'title', 'library_last_access')
+        
+    
     
 class DirectorySerializer(serializers.ModelSerializer):
     
