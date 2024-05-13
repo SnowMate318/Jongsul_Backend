@@ -54,7 +54,7 @@ class Library(models.Model):
     user = models.ForeignKey(User, related_name="library", on_delete=models.CASCADE)
     title = models.CharField(max_length=30, null=True)
     library_last_access = models.DateTimeField(auto_now=True)
-    is_deleted = models.BooleanField(default=False)
+    
     class Meta:
         db_table = 'library'
         constraints = [
@@ -68,7 +68,8 @@ class Library(models.Model):
 
 
 class Directory(models.Model):
-    library = models.ForeignKey(Library, on_delete=models.CASCADE)
+    library = models.ForeignKey(Library, related_name = 'directory', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name = 'directory', on_delete=models.SET_NULL, null=True)
     last_successed = models.IntegerField(null=True)
     concept = models.CharField(max_length=2000, null=True)
     title = models.CharField(max_length=30)
@@ -89,7 +90,7 @@ class Directory(models.Model):
         ]
 
 class Shared(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User,related_name = 'shareds', on_delete=models.CASCADE)
     shared_title = models.CharField(max_length=30)
     shared_content = models.CharField(max_length=500)
     shared_upload_datetime = models.DateTimeField(auto_now_add=True)
@@ -103,7 +104,7 @@ class Shared(models.Model):
         
 
 class SharedTag(models.Model):
-    shared = models.ForeignKey(Shared,related_name = 'shared_tag', on_delete=models.CASCADE)
+    shared = models.ForeignKey(Shared,related_name = 'shared_tags', on_delete=models.CASCADE)
     name = models.CharField(max_length=30)
     class Meta:
         db_table = "shared_tag"
@@ -117,22 +118,25 @@ class SharedTag(models.Model):
 # #문제 테이블        
 class Question(models.Model):
     question_num = models.IntegerField()
-    directory = models.ForeignKey(Directory, related_name="question", on_delete=models.CASCADE)
+    directory = models.ForeignKey(Directory, related_name="questions", on_delete=models.CASCADE)
     question_title = models.CharField(max_length=1000)
     question_content = models.CharField(max_length=2000, null=True)
     question_answer = models.CharField(max_length=100)
-    question_explaination = models.CharField(max_length=2000)
+    question_explanation = models.CharField(max_length=2000)
     question_type = models.IntegerField()
-    last_solveed = models.BooleanField(blank=True)
+    last_solved = models.BooleanField(null=True)
     is_scrapped = models.BooleanField(default=False)
     
     class Meta:
         db_table = 'question'
     
 class Choice(models.Model):
-    question = models.ForeignKey(Question, related_name="choice", on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, related_name="choices", on_delete=models.CASCADE)
     choice_num = models.IntegerField()
     choice_content = models.CharField(max_length=500)
+    
+    class Meta:
+        db_table = 'choice'
     
 class Image(models.Model):
     image_url = models.ImageField(upload_to='images/')

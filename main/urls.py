@@ -2,7 +2,7 @@ from django.urls import path, include
 from .views import RegisterAPIView, AuthAPIView, SharedAPIView, SharedDetailAPIView, SharedUserFilteredAPIView
 from .views import UserDeleteView, SharedUserFilteredAPIView, QuestionAPIView, QuestionDetailAPIView
 from .views import  DirectoryAPIView, DirectoryDetailAPIView, DirectoryShareAPIView, LibraryChangeAPIView
-from .views import QuestionSolveAPIView, QuestionScrapAPIView
+from .views import QuestionSolveAPIView, QuestionScrapAPIView, QuestionsTestAPIView
 from .views import LibraryAPIView, LibraryDetailAPIView
 from rest_framework import routers
 from .views import CustomTokenRefreshView
@@ -28,12 +28,14 @@ urlpatterns =[
     path("shared/<int:shared_id>/",SharedDetailAPIView.as_view()),
     path("shared/<int:shared_id>/directory/",DirectoryAPIView.as_view()),
     path("library/", LibraryAPIView.as_view()),
-    path("library/<int:library_id>", LibraryDetailAPIView.as_view()),
-    path("library/<int:library_id>/directory/<int:directory_id>/",DirectoryAPIView.as_view()),
-    path("library/<int:library_id>/directory/<int:directory_id>/share/",DirectoryAPIView.as_view()),
+    path("library/<int:library_id>/", LibraryDetailAPIView.as_view()),
+    path("library/<int:library_id>/directory/",DirectoryAPIView.as_view()),
+    path("directory/<int:directory_id>/",DirectoryDetailAPIView.as_view()),
+    path("directory/<int:directory_id>/share/",DirectoryShareAPIView.as_view()),
     path("library/<int:library_id>/directory/<int:directory_id>/change/",LibraryChangeAPIView.as_view()),
     path("library/<int:library_id>/directory/<int:directory_id>/question/", QuestionAPIView.as_view()),
-    path("library/<int:library_id>/directory/<int:directory_id>/question/<int:question_id>/", QuestionDetailAPIView.as_view()),
-    path("library/<int:library_id>/directory/<int:directory_id>/question/<int:question_id>/solve/", QuestionSolveAPIView.as_view()),
-    path("library/<int:library_id>/directory/<int:directory_id>/question/<int:question_id>/scrap/", QuestionDetailAPIView.as_view()),
+    path("directory/<int:directory_id>/question/test/", QuestionsTestAPIView.as_view()),
+    path("question/<int:question_id>/", QuestionDetailAPIView.as_view()),
+    path("question/<int:question_id>/solve/", QuestionSolveAPIView.as_view()),
+    path("question/<int:question_id>/scrap/", QuestionScrapAPIView.as_view()),
 ]

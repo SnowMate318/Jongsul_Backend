@@ -29,17 +29,17 @@ class SharedOnlySerializer(serializers.ModelSerializer):
 
 class SharedWithTagSerializer(serializers.ModelSerializer):
     
-    shared_tag = SharedTagSerializer(many=True)
+    shared_tags = SharedTagSerializer(many=True)
     class Meta:
         model = Shared
         fields = ('id', 'user', 'shared_title', 'shared_content', 'shared_upload_datetime', 'shared_upload_datetime','shared_tags')
 
 class LibrarySerializer(serializers.ModelSerializer):
     
-    user = UserSerializer(read_only=True)
+    #user = UserSerializer(read_only=True)
     class Meta:
         model = Library
-        fields = ('user', 'title', 'library_last_access')
+        fields = ('id', 'title', 'library_last_access')
         
     
     
@@ -47,19 +47,26 @@ class DirectorySerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Directory
-        fields = ('library', 'shared', 'last_successed', 'concept', 'title', 'question_type')
+        fields = ('id','library', 'last_successed', 'concept', 'title', 'question_type')
     
 class QuestionSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Question
-        fields = ('directory', 'question_title', 'question_content', 'question_answer', 'question_explaination', 'question_type', 'is_scrapped', 'question_num')
+        fields = ('directory', 'question_title', 'question_content', 'question_answer', 'question_explanation', 'question_type', 'is_scrapped', 'question_num')
     
 class ChoiceSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Choice
-        fidles = ('choice_num','choice_content')
+        fields = ('choice_num','choice_content',)
+        
+        
+class QuestionAndChoiceSerializer(serializers.ModelSerializer):
+    choices = ChoiceSerializer(many=True)
+    class Meta:
+        model = Question
+        fields = ('id','choices','directory', 'question_title', 'question_content', 'question_answer', 'question_explanation', 'question_type', 'is_scrapped', 'question_num')
         
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
