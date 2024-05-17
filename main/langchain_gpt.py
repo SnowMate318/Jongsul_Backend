@@ -1,5 +1,5 @@
 import getpass
-import os
+import os, sys
 from typing import List
 from langchain_openai import ChatOpenAI, OpenAI
 from langchain.output_parsers.openai_functions import JsonOutputFunctionsParser
@@ -9,40 +9,32 @@ from langchain_community.utils.openai_functions import (
     convert_pydantic_to_openai_function,
 )
 from langchain_community.callbacks import get_openai_callback
-
+sys.path.append('jongsul')  # jongsul 폴더를 시스템 경로에 추가
+from my_settings import OPENAI_API_KEY  # my_settings에서 OPENAI_API_KEY 가져오기
 
 def getQuestions(script, difficulty, multiple_choice, short_answer, ox_prob, all_prob):
     class Choice(BaseModel):
-        choice_num: int = Field(description="선택지 번호(1~4)를 답해줘")
+        choice_num: int = Field(description="선택지를 4개로 하고, 선택지 번호를 1~4로 해줘")
         choice_content: str = Field(description="선택지 내용을 답해줘")
 
     class Question(BaseModel):
         question_num: int = Field(description="문제번호를 답해줘")    
         question_title: str = Field(description="생성한 문제의 제목을 답해줘")
         choices: List[Choice]
-        "객관식 문제일 경우 choies 크기를 4로 해줘"
-        question_answer: str = Field(description="생성한 문제의 정답을 답해줘 객관식: (1~4) 주관식: o 또는 x, 단답형: 정답에 해당하는 단어")
+        "객관식 문제일 경우 4개의 초이스를 만들어줘"
+        question_answer: str = Field(description="생성한 문제의 정답을 답해줘. 객관식: 번호(1~4) ox문제: o 또는 x, 단답형: 정답에 해당하는 단어")
         question_explanation: str = Field(description="생성한 문제의 정답에 대한 설명을 답해줘")
         question_type : int = Field(description = "객관식 문제일경우 1, 단답형 문제일경우 2, ox문제일경우 3이라고 답해줘")
-
-
-    #하드코딩 -> 구현 후 삭제 부분
-    # script = concept
-    # difficulty = 9
-    # multiple_choice=2
-    # short_answer = 2
-    # ox_prob = 2
-    # all_prob = multiple_choice+short_answer+ox_prob
-    # ----
+        
     
     class Questions(BaseModel):
         "반환할 문제들"
         question: List[Question]
         
-    #gpt_model = "gpt-3.5-turbo-0125"
-    gpt_model = "gpt-4"
+    gpt_model = "gpt-3.5-turbo-0125"
+    #gpt_model = "gpt-4"
 
-    OPENAI_API_KEY = "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"
+
     model = ChatOpenAI(model=gpt_model, openai_api_key=OPENAI_API_KEY, temperature=0)
     prompt = ChatPromptTemplate.from_messages(
         [("system", "You are helpful assistant"), ("user", "{input}")]
@@ -54,7 +46,7 @@ def getQuestions(script, difficulty, multiple_choice, short_answer, ox_prob, all
 
     try:
         with get_openai_callback() as cb:
-            res = chain.invoke({"input": f"개념을 문제로 만들어줘 개념: {script}, 난이도: {difficulty},총 문제 갯수: {all_prob}( 객관식 {multiple_choice}문제, 단답형 {short_answer}문제, ox문제 {ox_prob}문제)"})
+            res = chain.invoke({"input": f"개념을 문제로 만들어줘 개념: {concept}, 난이도(1->(쉬움) ~ 10->어려움): {difficulty},총 문제 갯수:  객관식 {multiple_choice}문제, 단답형 {short_answer}문제, ox문제 {ox_prob}문제"})
     except Exception as e:
         print(f"An error occurred: {e}")
         return None  # 혹은 오류에 대한 추가 정보를 포함한 오류 객체를 반환할 수 있습니다.

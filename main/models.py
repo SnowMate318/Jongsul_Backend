@@ -139,9 +139,11 @@ class Choice(models.Model):
         db_table = 'choice'
     
 class Image(models.Model):
-    image_url = models.ImageField(upload_to='images/')
+    image_url = models.ImageField(upload_to='images/', null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, related_name="image", on_delete=models.SET_NULL, null=True)
+    text = models.CharField(max_length=8000, blank=True)
+    type_data = models.CharField(max_length=10)
     def __str__(self):
         return f"Image {self.pk} uploaded on {self.created_at}" # 관리자페이지, 디버깅에 사용
     

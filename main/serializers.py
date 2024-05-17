@@ -27,8 +27,13 @@ class SharedOnlySerializer(serializers.ModelSerializer):
         model = Shared
         fields = ('id','user', 'shared_title', 'shared_content', 'shared_upload_datetime', 'shared_upload_datetime')
 
-class SharedWithTagSerializer(serializers.ModelSerializer):
-    
+class MiniUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'email','user_name','profile')
+
+class SharedWithTagAndUserSerializer(serializers.ModelSerializer):
+    user = MiniUserSerializer(read_only=True)
     shared_tags = SharedTagSerializer(many=True)
     class Meta:
         model = Shared

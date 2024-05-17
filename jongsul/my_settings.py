@@ -10,3 +10,6 @@ myDATABASES = {
 					'PORT' : '3306'
 		}
 }
+
+OPENAI_API_KEY = "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"
+

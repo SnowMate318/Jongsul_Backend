@@ -3,11 +3,11 @@ from rest_framework.decorators import action
 from rest_framework import viewsets
 from rest_framework import views 
 from rest_framework.filters import OrderingFilter
-from .models import User, SharedTag, Shared, Library, Directory, Question, Choice
-from .serializers import UserSerializer, SharedOnlySerializer, SharedTagSerializer, SharedWithTagSerializer, LibrarySerializer, DirectorySerializer, QuestionSerializer
+from .models import User, SharedTag, Shared, Library, Directory, Question, Choice, Image
+from .serializers import UserSerializer, SharedOnlySerializer, SharedTagSerializer, SharedWithTagAndUserSerializer, LibrarySerializer, DirectorySerializer, QuestionSerializer
 from .serializers import ChoiceSerializer, QuestionAndChoiceSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
-from rest_framework_simplejwt.views import TokenRefreshView
+
 from rest_framework import status
 from rest_framework.response import Response
 import jwt
@@ -19,7 +19,8 @@ from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.tokens import AccessToken
 from django.db import transaction
 from .langchain_gpt import getQuestions
-
+from .image_to_string import imageToString
+from .pdf_to_string import pdfToString
 # /register/, post(회원가입)
 class RegisterAPIView(views.APIView):
     def post(self, request):
@@ -156,17 +157,17 @@ class UserDeleteView(views.APIView):
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)        
 
 # /auth/refresh, post(리프레시토큰 갱신)
-class CustomTokenRefreshView(TokenRefreshView):
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+# class CustomTokenRefreshView(TokenRefreshView):
+#     def post(self, request, *args, **kwargs):
+#         serializer = self.get_serializer(data=request.data)
 
-        try:
-            serializer.is_valid(raise_exception=True)
-        except TokenError as e:
-            # 토큰 관련 오류 처리
-            raise InvalidToken({"error": str(e.args[0])})
+#         try:
+#             serializer.is_valid(raise_exception=True)
+#         except TokenError as e:
+#             # 토큰 관련 오류 처리
+#             raise InvalidToken({"error": str(e.args[0])})
 
-        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+#         return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 # /shared/, get(커뮤니티 조회)    
 class SharedAPIView(views.APIView):    
@@ -190,7 +191,7 @@ class SharedAPIView(views.APIView):
         
         
         
-        serializer = SharedWithTagSerializer(shareds, many=True)
+        serializer = SharedWithTagAndUserSerializer(shareds, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 # 내가 올린 커뮤니티 조회, TODO: 삭제   
@@ -203,7 +204,7 @@ class SharedUserFilteredAPIView(views.APIView):
             raise Http404
         
         shareds = Shared.objects.filter(user=user, is_activated = True, is_deleted = False)  # 현재 사용자와 연결된 Shared 객체들을 필터링
-        serializer = SharedWithTagSerializer(shareds, many=True)  # 필터링된 객체들을 시리얼라이즈
+        serializer = SharedWithTagAndUserSerializer(shareds, many=True)  # 필터링된 객체들을 시리얼라이즈
         
         return Response(serializer.data, status=status.HTTP_200_OK)
                 
@@ -213,7 +214,7 @@ class SharedDetailAPIView(views.APIView):
     def get(self, request, shared_id):
         shared = get_object_or_404(Shared, id=shared_id, is_deleted=False)
         
-        serializer = SharedWithTagSerializer(shared) 
+        serializer = SharedWithTagAndUserSerializer(shared) 
         return Response(serializer.data, status=status.HTTP_200_OK)
     def put(self, request, shared_id):
         with transaction.atomic():
@@ -387,10 +388,10 @@ class DirectoryDetailAPIView(views.APIView):
         directory.save()
         return Response({"message": "성공적으로 디렉토리 내용을 변경했습니다."}, status=status.HTTP_200_OK)
     def delete(self, request, directory_id):
-        directory = get_object_or_404(Directory)
+        directory = get_object_or_404(Directory, id=directory_id, is_deleted=False)
         directory.is_deleted=True
         directory.save()
-        return Response({'message':'메시지가 성공석으로 삭제되었습니다.'}, status=status.HTTP_200_OK) # 소프트삭제
+        return Response({'message':'디렉토리가 성공적으로 삭제되었습니다.'}, status=status.HTTP_200_OK) # 소프트삭제
 
 
 #---------
@@ -455,6 +456,7 @@ class QuestionDetailAPIView(views.APIView):
             # Question 객체 필드 업데이트
             new_title = request.data.get('question_title')
             question.question_title=new_title
+
             new_content = request.data.get('question_content')
             question.question_content=new_content
             new_answer = request.data.get('question_answer')
@@ -518,4 +520,26 @@ class QuestionScrapAPIView(views.APIView):
         
         return Response({'message': '스크랩 성공했습니다.'},status=status.HTTP_200_OK)          
 
-    
+class ImageAPIView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # 사용자로부터 이미지 파일을 받습니다.
+        image_file = request.FILES.get('image')
+        pdf_file = request.FILES.get('pdf')
+        if not image_file and not pdf_file:
+            return Response({'error': '이미지 파일이 제공되지 않았습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        
+        # 이미지 파일을 텍스트로 변환하는 로직 (여기서는 예시로 간단한 처리만 진행)
+        # 실제로는 OCR 라이브러리를 사용하여 이미지에서 텍스트를 추출할 수 있습니다.
+        # 예: pytesseract.image_to_string(Image.open(image_file))
+        if image_file:
+            extracted_text = imageToString(image_file)
+            new_image = Image.objects.create(image=image_file, text=extracted_text)
+        elif pdf_file:
+            extracted_text = pdfToString(pdf_file)
+            pdf_message = Image.objects.create(type_data='PDF',text=extracted_text)
+
+        
+        return Response({'message': '이미지 처리 완료', 'extracted_text': extracted_text}, status=status.HTTP_200_OK)
