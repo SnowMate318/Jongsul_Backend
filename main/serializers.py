@@ -1,4 +1,4 @@
-from .models import User, SharedTag, Shared, Library, Directory, Question, Choice, Image
+from .models import User, WebProvider, SharedTag, Shared, Library, Directory, Question, Choice, Image
 from rest_framework import serializers
 
 # Serializers define the API representation.
@@ -13,8 +13,15 @@ class UserSerializer(serializers.ModelSerializer):
             password = validated_data['password']
         )
         return user
-        
+
+class EmailFindSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=64, required=True)
     
+class WebProviderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WebProvider
+        fields = ('id', 'user', 'provider_type', 'provider_id')
+
 class SharedTagSerializer(serializers.ModelSerializer):
     
     class Meta:

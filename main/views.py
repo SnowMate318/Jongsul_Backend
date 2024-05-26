@@ -140,7 +140,7 @@ class UserDeleteView(views.APIView):
             user_id = payload.get('user_id')
 
             # 해당 사용자 찾기
-            user = get_object_or_404(User, pk=user_id)
+            user = get_object_or_404(User, uuid=user_id)
             if user.is_activated:
                 # 사용자 비활성화
                 user.is_activated = False
@@ -156,18 +156,22 @@ class UserDeleteView(views.APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)        
 
-# /auth/refresh, post(리프레시토큰 갱신)
-# class CustomTokenRefreshView(TokenRefreshView):
-#     def post(self, request, *args, **kwargs):
-#         serializer = self.get_serializer(data=request.data)
+#/auth/find , post(이메일 찾기)
+class FindEmailView(views.APIView):
+    def post(self, rquest):
+        serializer = EmailFindSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({"error": "이메일이 올바르지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if User.objects.filter(email=serializer.data.get('email'), is_active=True).exists():
+            return Response({"message": "이메일이 존재합니다."}, status=status.HTTP_200_OK)
+        elif User.objects.filter(email=serializer.data.get('email'), is_active=False).exists():
+            return Response({"message": "탈퇴 처리된 회원입니다."}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({"message": "이메일이 존재하지 않습니다."}, status=status.HTTP_404_NOT_FOUND)
 
-#         try:
-#             serializer.is_valid(raise_exception=True)
-#         except TokenError as e:
-#             # 토큰 관련 오류 처리
-#             raise InvalidToken({"error": str(e.args[0])})
 
-#         return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
 
 # /shared/, get(커뮤니티 조회)    
 class SharedAPIView(views.APIView):    
@@ -447,7 +451,7 @@ class QuestionDetailAPIView(views.APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request, question_id):
         question = get_object_or_404(Question, pk = question_id)
-        serializer = QuestionSerializer(question)
+        serializer = QuestionAndChoiceSerializer(question)
         return Response(serializer.data, status=status.HTTP_200_OK)
     def patch(self, request, question_id):
         with transaction.atomic():

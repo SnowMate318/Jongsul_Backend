@@ -31,23 +31,29 @@ class UserManager(BaseUserManager):
 
 # AbstractBaseUser를 상속해서 유저 커스텀
 class User(AbstractBaseUser, PermissionsMixin):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    email = models.EmailField(max_length=30, unique=True, null=False, blank=False)
+    uuid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+    email = models.EmailField(max_length=50, unique=True, null=True)
     is_superuser = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    user_name = models.CharField(null = True, max_length=30)
+    user_name = models.CharField(blank = True, max_length=30)
     #이메일과 비밀번호
-    profile = models.URLField(max_length=200, null=True)
+    profile = models.ImageField(upload_to='%Y%m%d/', null=True, blank=True)
 	# 헬퍼 클래스 사용
     objects = UserManager()
 
 	# 사용자의 username field는 email으로 설정 (이메일로 로그인)
     USERNAME_FIELD = 'email'
 
-
+class WebProvider(models.Model):
+    user = models.ForeignKey(User, related_name="web_provider", on_delete=models.CASCADE, to_field='uuid')
+    provider_type = models.CharField(max_length=10)
+    provider_id = models.CharField(max_length=100)
+    
+    class Meta:
+        db_table = 'web_provider'
 
 # #문제 라이브러리 테이블
 class Library(models.Model):
@@ -68,7 +74,7 @@ class Library(models.Model):
 
 
 class Directory(models.Model):
-    library = models.ForeignKey(Library, related_name = 'directory', on_delete=models.CASCADE)
+    library = models.ForeignKey(Library, related_name = 'directory', on_delete=models.SET_NULL, null=True)
     user = models.ForeignKey(User, related_name = 'directory', on_delete=models.SET_NULL, null=True)
     last_successed = models.IntegerField(null=True)
     concept = models.CharField(max_length=2000, null=True)
