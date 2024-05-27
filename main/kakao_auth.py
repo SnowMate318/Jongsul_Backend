@@ -34,7 +34,7 @@ def kakao_callback(request):
     if error is not None:
         return Response(error, status=status.HTTP_400_BAD_REQUEST)
     
-    #받은 토큰에서 access_token 추출 후 저장
+    #받은 토큰에서 access_token 추출
     access_token = token_response_json.get('access_token')
     
     # 해당 access_token으로 유저 정보 요청
@@ -98,4 +98,8 @@ def kakao_callback(request):
     response.renderer_context = {}
     
     return response
+
+
+
+    
 

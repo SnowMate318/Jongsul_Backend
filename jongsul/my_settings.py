@@ -21,4 +21,5 @@ SOCIALACCOUNT_PROVIDERS = {
             'key': ''
         }
     }
+    
 }
