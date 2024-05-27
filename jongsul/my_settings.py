@@ -10,3 +10,16 @@ myDATABASES = {
 					'PORT' : '3306'
 		}
 }
+
+OPENAI_API_KEY = "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"
+
+SOCIALACCOUNT_PROVIDERS = {
+    'kakao': {
+        'APP': {
+            'client_id': '1bf406f1b9c00885caa2e9b34b95035d',
+            'secret': '1079055',
+            'key': ''
+        }
+    }
+    
+}

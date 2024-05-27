@@ -1,4 +1,4 @@
-from .models import User, SharedTag, Shared, Library, Directory, Question, Choice, Image
+from .models import User, WebProvider, SharedTag, Shared, Library, Directory, Question, Choice, Image
 from rest_framework import serializers
 
 # Serializers define the API representation.
@@ -13,8 +13,15 @@ class UserSerializer(serializers.ModelSerializer):
             password = validated_data['password']
         )
         return user
-        
+
+class EmailFindSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=64, required=True)
     
+class WebProviderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WebProvider
+        fields = ('id', 'user', 'provider_type', 'provider_id')
+
 class SharedTagSerializer(serializers.ModelSerializer):
     
     class Meta:
@@ -27,38 +34,53 @@ class SharedOnlySerializer(serializers.ModelSerializer):
         model = Shared
         fields = ('id','user', 'shared_title', 'shared_content', 'shared_upload_datetime', 'shared_upload_datetime')
 
-class SharedWithTagSerializer(serializers.ModelSerializer):
-    
-    shared_tag = SharedTagSerializer(many=True)
+class MiniUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'email','user_name','profile')
+
+class SharedWithTagAndUserSerializer(serializers.ModelSerializer):
+    user = MiniUserSerializer(read_only=True)
+    shared_tags = SharedTagSerializer(many=True)
     class Meta:
         model = Shared
-        fields = ('id', 'user', 'shared_title', 'shared_content', 'shared_upload_datetime', 'shared_upload_datetime','shared_tag')
+        fields = ('id', 'user', 'shared_title', 'shared_content', 'shared_upload_datetime', 'shared_upload_datetime','shared_tags')
 
 class LibrarySerializer(serializers.ModelSerializer):
     
+    #user = UserSerializer(read_only=True)
     class Meta:
         model = Library
-        fields = ('user', 'title', 'library_last_access')
+        fields = ('id', 'title', 'library_last_access')
+        
+    
     
 class DirectorySerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Directory
-        fields = ('library', 'shared', 'last_successed', 'concept', 'title', 'question_type')
+        fields = ('id','library', 'last_successed', 'concept', 'title', 'question_type')
     
 class QuestionSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Question
-        fields = ('directory', 'question_title', 'question_content', 'question_answer', 'question_explaination', 'question_type', 'is_scrapped', 'question_num')
+        fields = ('directory', 'question_title', 'question_content', 'question_answer', 'question_explanation', 'question_type', 'is_scrapped', 'question_num')
     
 class ChoiceSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Choice
-        fidles = ('choice_num','choice_content')
+        fields = ('choice_num','choice_content',)
+        
+        
+class QuestionAndChoiceSerializer(serializers.ModelSerializer):
+    choices = ChoiceSerializer(many=True)
+    class Meta:
+        model = Question
+        fields = ('id','choices','directory', 'question_title', 'question_content', 'question_answer', 'question_explanation', 'question_type', 'is_scrapped', 'question_num')
         
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = UploadedImage
+        model = Image
         fields = ('image',)

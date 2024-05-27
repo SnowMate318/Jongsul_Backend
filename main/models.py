@@ -31,30 +31,36 @@ class UserManager(BaseUserManager):
 
 # AbstractBaseUser를 상속해서 유저 커스텀
 class User(AbstractBaseUser, PermissionsMixin):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    email = models.EmailField(max_length=30, unique=True, null=False, blank=False)
+    uuid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+    email = models.EmailField(max_length=50, unique=True, null=True)
     is_superuser = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    user_name = models.CharField(null = True, max_length=30)
+    user_name = models.CharField(blank = True, max_length=30)
     #이메일과 비밀번호
-    profile = models.URLField(max_length=200, null=True)
+    profile = models.ImageField(upload_to='%Y%m%d/', null=True, blank=True)
 	# 헬퍼 클래스 사용
     objects = UserManager()
 
 	# 사용자의 username field는 email으로 설정 (이메일로 로그인)
     USERNAME_FIELD = 'email'
 
-
+class WebProvider(models.Model):
+    user = models.ForeignKey(User, related_name="web_provider", on_delete=models.CASCADE, to_field='uuid')
+    provider_type = models.CharField(max_length=10)
+    provider_id = models.CharField(max_length=100)
+    
+    class Meta:
+        db_table = 'web_provider'
 
 # #문제 라이브러리 테이블
 class Library(models.Model):
     user = models.ForeignKey(User, related_name="library", on_delete=models.CASCADE)
     title = models.CharField(max_length=30, null=True)
     library_last_access = models.DateTimeField(auto_now=True)
-    is_deleted = models.BooleanField(default=False)
+    
     class Meta:
         db_table = 'library'
         constraints = [
@@ -68,7 +74,8 @@ class Library(models.Model):
 
 
 class Directory(models.Model):
-    library = models.ForeignKey(Library, on_delete=models.CASCADE)
+    library = models.ForeignKey(Library, related_name = 'directory', on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(User, related_name = 'directory', on_delete=models.SET_NULL, null=True)
     last_successed = models.IntegerField(null=True)
     concept = models.CharField(max_length=2000, null=True)
     title = models.CharField(max_length=30)
@@ -89,7 +96,7 @@ class Directory(models.Model):
         ]
 
 class Shared(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User,related_name = 'shareds', on_delete=models.CASCADE)
     shared_title = models.CharField(max_length=30)
     shared_content = models.CharField(max_length=500)
     shared_upload_datetime = models.DateTimeField(auto_now_add=True)
@@ -103,7 +110,7 @@ class Shared(models.Model):
         
 
 class SharedTag(models.Model):
-    shared = models.ForeignKey(Shared,related_name = 'shared_tag', on_delete=models.CASCADE)
+    shared = models.ForeignKey(Shared,related_name = 'shared_tags', on_delete=models.CASCADE)
     name = models.CharField(max_length=30)
     class Meta:
         db_table = "shared_tag"
@@ -117,68 +124,35 @@ class SharedTag(models.Model):
 # #문제 테이블        
 class Question(models.Model):
     question_num = models.IntegerField()
-    directory = models.ForeignKey(Directory, related_name="question", on_delete=models.CASCADE)
+    directory = models.ForeignKey(Directory, related_name="questions", on_delete=models.CASCADE)
     question_title = models.CharField(max_length=1000)
     question_content = models.CharField(max_length=2000, null=True)
     question_answer = models.CharField(max_length=100)
-    question_explaination = models.CharField(max_length=2000)
+    question_explanation = models.CharField(max_length=2000)
     question_type = models.IntegerField()
+    last_solved = models.BooleanField(null=True)
     is_scrapped = models.BooleanField(default=False)
-
+    
     class Meta:
         db_table = 'question'
     
 class Choice(models.Model):
-    question = models.ForeignKey(Question, related_name="choice", on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, related_name="choices", on_delete=models.CASCADE)
     choice_num = models.IntegerField()
     choice_content = models.CharField(max_length=500)
     
+    class Meta:
+        db_table = 'choice'
+    
 class Image(models.Model):
-    image_url = models.ImageField(upload_to='images/')
+    image_url = models.ImageField(upload_to='images/', null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
+    user = models.ForeignKey(User, related_name="image", on_delete=models.SET_NULL, null=True)
+    text = models.CharField(max_length=8000, blank=True)
+    type_data = models.CharField(max_length=10)
     def __str__(self):
         return f"Image {self.pk} uploaded on {self.created_at}" # 관리자페이지, 디버깅에 사용
     
-#유저 정보 테이블
-# class ServiceUser(models.Model):
-#     user_id = models.CharField(max_length=100, primary_key=True)
-#     user_name = models.CharField(null=False, max_length=30)
-#     #이메일과 비밀번호
-#     profile = models.URLField(max_length=200, null=True)
-#     #올린 문제? 아니면 라이브러리?
-    
-#     class Meta: 
-#         #app_label = 'ulifeapp'
-#         db_table = 'serviceuser'
-
-
-# #태그 정보 테이블
-# class UserTag(models.Model):
-#     user = models.ForeignKey(ServiceUser, on_delete=models.CASCADE)
-#     #user_tag_id = models.AutoField(primary_key=True)
-#     user_tag_name = models.CharField(max_length=30, null=False)
-#     #태그정보: 최대 30자
-#     class Meta:
-#         db_table = 'usertag'
-
-# class Tag(models.Model):
-#     tag_name = models.CharField(max_length=30)
-#     class Meta:
-#         db_table = 'tag'    
-
-# class Search(models.Model):
-#     user_id = models.ForeignKey(User, related_name='user', on_delete=models.CASCADE)
-#     shared_id = models.ForeignKey(Shared, related_name='search', on_delete=models.CASCADE)
-#     shared_name = models.CharField(max_length=50, null=True)
-#     shared_content = models.CharField(null=True)
-#     shared_user_name = models.CharField(max_length=30, null=True)  
-#     search_tag = models.CharField(max_length=30, null=True)
-
-#     class Meta:
-#         unique_together = ('user_id', 'shared_id')
-#         managed = False
-#         db_table = 'search'
 
 
         
