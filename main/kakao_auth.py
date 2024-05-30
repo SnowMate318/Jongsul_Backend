@@ -8,8 +8,10 @@ from jongsul.my_settings import SOCIALACCOUNT_PROVIDERS
 from django.shortcuts import redirect
 import requests
 from rest_framework.renderers import JSONRenderer
+#DEBUG
+#BASE_URL = 'http://127.0.0.1:8000'
 
-BASE_URL = 'http://127.0.0.1:8000'
+BASE_URL = 'http://13.210.178.148:80'
 KAKAO_CALLBACK_URI = BASE_URL + '/api/kakao/login/callback'
 
 # 인가코드 받기
