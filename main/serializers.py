@@ -39,12 +39,20 @@ class MiniUserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'email','user_name','profile')
 
-class SharedWithTagAndUserSerializer(serializers.ModelSerializer):
+class DirectorySerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Directory
+        fields = ('id','library', 'last_successed', 'concept', 'title', 'question_type')
+    
+
+class SharedWithTagAndUserWithDirectorySerializer(serializers.ModelSerializer):
     user = MiniUserSerializer(read_only=True)
     shared_tags = SharedTagSerializer(many=True)
+    directory = DirectorySerializer(read_only=True)
     class Meta:
         model = Shared
-        fields = ('id', 'user', 'shared_title', 'shared_content', 'shared_upload_datetime', 'shared_upload_datetime','shared_tags')
+        fields = ('id', 'user', 'directory', 'shared_title', 'shared_content', 'shared_upload_datetime', 'shared_tags')
 
 class LibrarySerializer(serializers.ModelSerializer):
     
@@ -52,21 +60,20 @@ class LibrarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Library
         fields = ('id', 'title', 'library_last_access')
-        
     
-    
-class DirectorySerializer(serializers.ModelSerializer):
-    
+
+class LibraryWithDirectorySerializer(serializers.ModelSerializer):
+    directories = DirectorySerializer(many=True)
     class Meta:
-        model = Directory
-        fields = ('id','library', 'last_successed', 'concept', 'title', 'question_type')
-    
+        model = Library
+        fields = ('id', 'title', 'library_last_access', 'directories')
+        
 class QuestionSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Question
-        fields = ('directory', 'question_title', 'question_content', 'question_answer', 'question_explanation', 'question_type', 'is_scrapped', 'question_num')
-    
+        fields = ('directory', 'question_title', 'question_content', 'question_answer', 'question_explanation', 'question_type', 'is_scrapped', 'question_num')   
+
 class ChoiceSerializer(serializers.ModelSerializer):
     
     class Meta:

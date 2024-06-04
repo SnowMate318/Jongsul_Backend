@@ -74,12 +74,12 @@ class Library(models.Model):
 
 
 class Directory(models.Model):
-    library = models.ForeignKey(Library, related_name = 'directory', on_delete=models.SET_NULL, null=True)
-    user = models.ForeignKey(User, related_name = 'directory', on_delete=models.SET_NULL, null=True)
+    library = models.ForeignKey(Library, related_name = 'directories', on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(User, related_name = 'directories', on_delete=models.SET_NULL, null=True)
     last_successed = models.IntegerField(null=True)
     concept = models.CharField(max_length=2000, null=True)
     title = models.CharField(max_length=30)
-    question_type = models.CharField(max_length=100, null=True)
+    question_type = models.CharField(max_length=100, null=True, blank=True)
     directory_last_access = models.DateTimeField(auto_now=True)
     is_scrap_directory = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
@@ -102,7 +102,7 @@ class Shared(models.Model):
     shared_upload_datetime = models.DateTimeField(auto_now_add=True)
     is_activated = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
-    directory = models.ForeignKey(Directory, on_delete=models.CASCADE, null=True, blank=True)
+    directory = models.ForeignKey(Directory, related_name='directory',on_delete=models.CASCADE, null=True, blank=True)
     download_count = models.IntegerField(default = 0)
 
     class Meta:
@@ -126,7 +126,7 @@ class Question(models.Model):
     question_num = models.IntegerField()
     directory = models.ForeignKey(Directory, related_name="questions", on_delete=models.CASCADE)
     question_title = models.CharField(max_length=1000)
-    question_content = models.CharField(max_length=2000, null=True)
+    question_content = models.CharField(max_length=2000, null=True, blank=True)
     question_answer = models.CharField(max_length=100)
     question_explanation = models.CharField(max_length=2000)
     question_type = models.IntegerField()

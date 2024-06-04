@@ -47,6 +47,7 @@ def getQuestions(script, difficulty, multiple_choice, short_answer, ox_prob, all
     try:
         with get_openai_callback() as cb:
             res = chain.invoke({"input": f"개념을 문제로 만들어줘 개념: {concept}, 난이도(1->(쉬움) ~ 10->어려움): {difficulty},총 문제 갯수:  객관식 {multiple_choice}문제, 단답형 {short_answer}문제, ox문제 {ox_prob}문제"})
+            print(res)
     except Exception as e:
         print(f"An error occurred: {e}")
         return None  # 혹은 오류에 대한 추가 정보를 포함한 오류 객체를 반환할 수 있습니다.
