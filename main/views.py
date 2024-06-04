@@ -239,33 +239,51 @@ class SharedDetailAPIView(views.APIView):
         return Response({"message": "성공적으로 삭제되었습니다."}, status=status.HTTP_200_OK)     
 
 class SharedDownloadAPIView(views.APIView):
-    def put(self, request, shared_id):
-        with transaction.atomic():
-            user = request.user
-            shared = get_object_or_404(Shared, id=shared_id, is_deleted=False)
+    def post(self, request, shared_id):
+        try:
+            with transaction.atomic():
+                user = request.user
+                shared = get_object_or_404(Shared, id=shared_id, is_deleted=False)
 
-            # Step 1: 사용자의 Library 확인 또는 생성
-            library, created = Library.objects.get_or_create(
-                user=user, title="다운로드한 문제들"
-            )
-
-            # Step 2: 다운로드한 Directory 정보를 기반으로 새 Directory 인스턴스 생성
-            downloaded_directory = get_object_or_404(Directory, is_deleted=False, shared = shared)
-                
-            Directory.objects.create(
-                library=library,
-                    concept=downloaded_directory.concept,
-                    title=downloaded_directory.title + " (복사)",
-                    #question_type=downloaded_directory.question_type
-                    # 필요한 나머지 필드도 이와 같은 방식으로 복사
+                # Step 1: 사용자의 Library 확인 또는 생성
+                library, created = Library.objects.get_or_create(
+                    user=user, title="다운로드한 문제들"
                 )
 
-            # Step 3: Shared의 download_count 증가
-            shared.download_count += 1
-            shared.save()
+                # Step 2: 다운로드한 Directory 정보를 기반으로 새 Directory 인스턴스 생성
+                copy_num=1
+                title = shared.shared_title
+                directories = Directory.objects.filter(library=library)
+                for directory in directories:
+                    if title == directory.title:
+                        directory.title = title + f"({copy_num})"
+                        copy_num+=1
+                downloaded_directory = Directory.objects.create(title=title, library=library, user=user)
 
-        return Response({"message": "성공적으로 다운로드 하였습니다", "download_count": shared.download_count}, status=status.HTTP_200_OK)
+                # Step 3: Shared의 download_count 증가, 문제 복사
+                questions = Question.objects.filter(directory=shared.directory)
+                for question in questions:
+                    new_question = Question.objects.create(
+                        directory=downloaded_directory,
+                        question_num=question.question_num,
+                        question_title=question.question_title,
+                        question_answer=question.question_answer,
+                        question_explanation=question.question_explanation,
+                        question_type=question.question_type
+                    )
+                    choices = Choice.objects.filter(question=question)
+                    for choice in choices:
+                        Choice.objects.create(
+                            question=new_question,
+                            choice_num=choice.choice_num,
+                            choice_content=choice.choice_content
+                        )
+                shared.download_count += 1
+                shared.save()
 
+            return Response({"message": "성공적으로 다운로드 하였습니다", "download_count": shared.download_count}, status=status.HTTP_200_OK)
+        except Shared.DoesNotExist:
+            return Response({"message": "해당 공유가 존재하지 않습니다"}, status=status.HTTP_404_NOT_FOUND)
 
 # /library/ post(라이브러리 생성), get(전체 라이브러리 조회)
 class LibraryAPIView(views.APIView):
@@ -333,7 +351,7 @@ class DirectoryAPIView(views.APIView):
                     return Response({'message': 'GPT_API 관련 오류'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
                 
                 library = get_object_or_404(Library, id=library_id)
-                directory = Directory.objects.create(library=library, title=title)
+                directory = Directory.objects.create(library=library, title=title, user=request.user)
                 
                 for ques in questions:
                     question = Question.objects.create(

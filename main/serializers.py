@@ -52,7 +52,7 @@ class SharedWithTagAndUserWithDirectorySerializer(serializers.ModelSerializer):
     directory = DirectorySerializer(read_only=True)
     class Meta:
         model = Shared
-        fields = ('id', 'user', 'directory', 'shared_title', 'shared_content', 'shared_upload_datetime', 'shared_tags')
+        fields = ('id', 'user', 'directory', 'shared_title', 'shared_content', 'shared_upload_datetime', 'shared_tags', 'download_count')
 
 class LibrarySerializer(serializers.ModelSerializer):
     
