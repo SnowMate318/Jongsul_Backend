@@ -4,7 +4,7 @@ from rest_framework import viewsets
 from rest_framework import views 
 from rest_framework.filters import OrderingFilter
 from .models import User, SharedTag, Shared, Library, Directory, Question, Choice, Image
-from .serializers import UserSerializer, SharedOnlySerializer, SharedTagSerializer, SharedWithTagAndUserSerializer, LibrarySerializer, DirectorySerializer, QuestionSerializer
+from .serializers import UserSerializer, SharedOnlySerializer, SharedTagSerializer, SharedWithTagAndUserWithDirectorySerializer, LibrarySerializer, LibraryWithDirectorySerializer, DirectorySerializer, QuestionSerializer
 from .serializers import ChoiceSerializer, QuestionAndChoiceSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 
@@ -112,14 +112,18 @@ class AuthAPIView(views.APIView):
             # payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
             # user_id = payload.get('user_id')
             # user = get_object_or_404(User, pk=user_id, is_activated=True)
-            new_name = request.data.get('name')
-            new_image = request.data.get('profile_image')
-            
-            user.user_name = new_name
-            user.profile = new_image
+            new_name = request.data.get('user_name')
+            new_image = request.data.get('profile')
+            serializer = UserSerializer(user)
+            if new_name is None and new_image is None:
+                return Response({"message": "수정할 내용이 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+            if new_name is not None:
+                user.user_name = new_name
+            if new_image is not None:
+                user.profile = new_image
             
             user.save()
-            return Response({"message": "유저 정보가 성공적으로 수정되었습니다."}, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
             
         except(jwt.exceptions.ExpiredSignatureError):
             # 토큰 만료 시 토큰 갱신
@@ -134,18 +138,12 @@ class AuthAPIView(views.APIView):
 class UserDeleteView(views.APIView):
     def delete(self, request):
         try:
-            # 토큰에서 사용자 ID 추출
-            token = request.headers.get('Authorization', '').split('Bearer ')[1]
-            payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-            user_id = payload.get('user_id')
-
-            # 해당 사용자 찾기
-            user = get_object_or_404(User, uuid=user_id)
-            if user.is_activated:
+            user = request.user
+            if user.is_active:
                 # 사용자 비활성화
-                user.is_activated = False
+                user.is_active = False
                 user.save()
-                return Response({"message": "회원 탈퇴 처리가 완료되었습니다."}, status=status.HTTP_204_NO_CONTENT)
+                return Response({"message": "회원 탈퇴 처리가 완료되었습니다."}, status=status.HTTP_200_OK)
             else:
                 return Response({"error": "이미 비활성화된 계정입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -153,8 +151,7 @@ class UserDeleteView(views.APIView):
             return Response({"error": "토큰이 만료되었습니다."}, status=status.HTTP_401_UNAUTHORIZED)
         except jwt.InvalidTokenError:
             return Response({"error": "유효하지 않은 토큰입니다."}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)        
+       
 
 #/auth/find , post(이메일 찾기)
 class FindEmailView(views.APIView):
@@ -195,7 +192,7 @@ class SharedAPIView(views.APIView):
         
         
         
-        serializer = SharedWithTagAndUserSerializer(shareds, many=True)
+        serializer = SharedWithTagAndUserWithDirectorySerializer(shareds, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 # 내가 올린 커뮤니티 조회, TODO: 삭제   
@@ -218,8 +215,30 @@ class SharedDetailAPIView(views.APIView):
     def get(self, request, shared_id):
         shared = get_object_or_404(Shared, id=shared_id, is_deleted=False)
         
-        serializer = SharedWithTagAndUserSerializer(shared) 
+        serializer = SharedWithTagAndUserWithDirectorySerializer(shared) 
         return Response(serializer.data, status=status.HTTP_200_OK)
+    def patch(self, request, shared_id):
+        with transaction.atomic():
+            new_title = request.data.get('shared_title')
+            new_content = request.data.get('shared_content')
+            new_tags = request.data['shared_tags']
+            user = request.user
+            shared = get_object_or_404(Shared, id=shared_id, user=user, is_deleted=False)
+            shared.shared_title = new_title
+            shared.shared_content = new_content
+            shared.save()
+            shared_tags = SharedTag.objects.filter(shared=shared).delete()
+            for new_tag in new_tags:
+                new_name = new_tag['name']                
+                SharedTag.objects.create(shared=shared, name=new_name) 
+        return Response({"message": "성공적으로 수정되었습니다"},status=status.HTTP_200_OK)   
+    def delete(self, request, shared_id):
+        shared = get_object_or_404(Shared, id=shared_id, is_deleted=False)
+        shared.is_deleted = True
+        shared.save()
+        return Response({"message": "성공적으로 삭제되었습니다."}, status=status.HTTP_200_OK)     
+
+class SharedDownloadAPIView(views.APIView):
     def put(self, request, shared_id):
         with transaction.atomic():
             user = request.user
@@ -232,9 +251,9 @@ class SharedDetailAPIView(views.APIView):
 
             # Step 2: 다운로드한 Directory 정보를 기반으로 새 Directory 인스턴스 생성
             downloaded_directory = get_object_or_404(Directory, is_deleted=False, shared = shared)
-            
+                
             Directory.objects.create(
-                    library=library,
+                library=library,
                     concept=downloaded_directory.concept,
                     title=downloaded_directory.title + " (복사)",
                     #question_type=downloaded_directory.question_type
@@ -246,27 +265,7 @@ class SharedDetailAPIView(views.APIView):
             shared.save()
 
         return Response({"message": "성공적으로 다운로드 하였습니다", "download_count": shared.download_count}, status=status.HTTP_200_OK)
-    def patch(self, request, shared_id):
-        with transaction.atomic():
-            new_title = request.data.get('shared_title')
-            new_content = request.data.get('shared_content')
-            new_tags = request.data['shared_tags']
-            user = request.user
-            shared = get_object_or_404(Shared, id=shared_id, user=user, is_deleted=False)
-            shared.shared_title = new_title
-            shared.shared_content = new_content
-            shared.save()
-            shared_tags = SharedTag.objects.filter(shared=shared)
-            SharedTag.objects.filter(shared=shared).delete()
-            for new_tag in new_tags:
-                new_name = new_tag['name']                
-                SharedTag.objects.create(shared=shared, name=new_name) 
-        return Response({"message": "성공적으로 수정되었습니다"},status=status.HTTP_200_OK)   
-    def delete(self, request, shared_id):
-        shared = get_object_or_404(Shared, id=shared_id, is_deleted=False)
-        shared.is_deleted = True
-        shared.save()
-        return Response({"message": "성공적으로 삭제되었습니다."}, status=status.HTTP_200_OK)     
+
 
 # /library/ post(라이브러리 생성), get(전체 라이브러리 조회)
 class LibraryAPIView(views.APIView):
@@ -274,7 +273,8 @@ class LibraryAPIView(views.APIView):
     def post(self, request):
         title = request.data.get("title")
         user = request.user
-        
+        if title == "":
+            return Response({'message':'제목을 입력해야합니다'},status=status.HTTP_400_BAD_REQUEST)
         library = Library.objects.create(user=user, title=title)
         return Response({'message': '새로운 라이브러리가 생성되었습니다'},status=status.HTTP_201_CREATED)
     def get(self, request):
@@ -289,7 +289,7 @@ class LibraryDetailAPIView(views.APIView):
     def get(self, request, library_id):
         user = request.user
         library = get_object_or_404(Library, id=library_id)
-        serializer = LibrarySerializer(library)
+        serializer = LibraryWithDirectorySerializer(library)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
     def patch(self, request, library_id):
@@ -375,7 +375,7 @@ class DirectoryDetailAPIView(views.APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)  
     def patch(self, request, directory_id):
         user = request.user
-        directory = get_object_or_404(Directory, user=user, id = directory_id, is_deleted=False)
+        directory = get_object_or_404(Directory, id = directory_id, is_deleted=False)
         
         dir_title = request.data.get('title')
         if dir_title:
@@ -397,8 +397,8 @@ class DirectoryDetailAPIView(views.APIView):
         directory.save()
         return Response({'message':'디렉토리가 성공적으로 삭제되었습니다.'}, status=status.HTTP_200_OK) # 소프트삭제
 
-
 #---------
+
 class QuestionsTestAPIView(views.APIView):
     permission_classes = [IsAuthenticated]
     def get(self,request,directory_id):
@@ -429,8 +429,15 @@ class DirectoryShareAPIView(views.APIView):
         user = request.user
         shared_title = request.data.get('shared_title')
         shared_content = request.data.get('shared_content')
-        directory = get_object_or_404(Directory, id=directory_id)
-        Shared.objects.create(user=user, shared_title = shared_title, shared_content = shared_content, directory=directory)
+        shared_tags = request.data['shared_tags']
+        
+        with transaction.atomic():
+            directory = get_object_or_404(Directory, id=directory_id)
+            shared = Shared.objects.create(user=user, shared_title = shared_title, shared_content = shared_content, directory=directory)
+            
+            for shared_tag in shared_tags:
+                title = shared_tag['name']
+                SharedTag.objects.create(shared=shared, name=title)
     
         return Response({"message": "성공적으로 업로드 되었습니다."}, status=status.HTTP_200_OK)
 
@@ -459,25 +466,29 @@ class QuestionDetailAPIView(views.APIView):
             
             # Question 객체 필드 업데이트
             new_title = request.data.get('question_title')
-            question.question_title=new_title
+            if new_title is not None:
+                question.question_title=new_title
 
             new_content = request.data.get('question_content')
-            question.question_content=new_content
+            if new_content is not None:
+                question.question_content=new_content
             new_answer = request.data.get('question_answer')
-            question.question_answer = new_answer
+            if new_answer is not None:
+                question.question_answer = new_answer
             new_explanation = request.data.get('question_explanation')
-            question.question_explanation = new_explanation
+            if new_explanation is not None:
+                question.question_explanation = new_explanation
             question.save()
             
             choices = request.data.get('choices', [])
-            for cho in choices:
-                choice_num = cho.get('choice_num')
-                choice_content = cho.get('choice_content')
-                
-                choice = get_object_or_404(Choice, question=question, choice_num=choice_num)
-                if choice_content is not None:
-                    choice.choice_content = choice_content
-                choice.save()
+            if choices is not None:
+                for cho in choices:
+                    choice_num = cho.get('choice_num')
+                    choice_content = cho.get('choice_content')
+                    choice = get_object_or_404(Choice, question=question, choice_num=choice_num)
+                    if choice_content is not None:
+                        choice.choice_content = choice_content
+                    choice.save()  # Save each choice inside the loop
 
         return Response({"message": "문제가 성공적으로 업데이트되었습니다."}, status=status.HTTP_200_OK)   
     def delete(self, request, question_id):
@@ -504,12 +515,14 @@ class QuestionSolveAPIView(views.APIView):
     permission_classes = [IsAuthenticated]
     def patch(self, request, question_id):
         #answer = request.body.get('answer')
-        last_solved = request.data.get('last_solved') # 문제를 맞추면 true, 아니면 false        
+        last_solved = request.data.get('last_solved') # 문제를 맞추면 true, 아니면 false 
+        if last_solved is None:
+            return Response({'message': '정답 여부를 입력해주세요'}, status=status.HTTP_400_BAD_REQUEST)       
         question = get_object_or_404(Question, pk=question_id)
         question.last_solved = last_solved
         question.save()
         
-        return Response({'message': '문제를 풀었습니다.'},status=status.HTTP_200_OK)        
+        return Response({'message': '문제를 풀었습니다.', "ls":last_solved},status=status.HTTP_200_OK)        
 
 # 문제 스크랩
 # /question/<int:question_id>/scrap/
@@ -519,6 +532,7 @@ class QuestionScrapAPIView(views.APIView):
         
         is_scrapped = request.data.get('is_scrapped')
         question = get_object_or_404(Question, pk=question_id)
+        user = request.user
         question.is_scrapped = is_scrapped
         question.save()
         

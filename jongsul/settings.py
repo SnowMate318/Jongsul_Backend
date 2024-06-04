@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = '/media/'
 
-
+APPEND_SLASH=False
 
 
 
@@ -36,7 +36,7 @@ SECRET_KEY = 'django-insecure-8c%e*g%tfk^(!5ycb63p$&9+&w3zf!*sukl&o0$8__wfm-ig#u
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 SITE_ID=1
 
 TEMPLATES = [
