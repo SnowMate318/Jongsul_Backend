@@ -133,7 +133,6 @@ class AuthAPIView(views.APIView):
             # 사용 불가능한 토큰일 때
             return Response({"message: 유효하지 않은 토큰입니다."},status=status.HTTP_400_BAD_REQUEST)
 
-
 # /auth/delete, delete(유저정보 삭제)        
 class UserDeleteView(views.APIView):
     def delete(self, request):
@@ -556,7 +555,7 @@ class QuestionScrapAPIView(views.APIView):
         
         return Response({'message': '스크랩 성공했습니다.'},status=status.HTTP_200_OK)          
 
-class ImageAPIView(views.APIView):
+class FileAPIView(views.APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -564,18 +563,20 @@ class ImageAPIView(views.APIView):
         image_file = request.FILES.get('image')
         pdf_file = request.FILES.get('pdf')
         if not image_file and not pdf_file:
-            return Response({'error': '이미지 파일이 제공되지 않았습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': '이미지 또는 PDF 파일이 제공되지 않았습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            if image_file:
+                extracted_text = imageToString(image_file)
+                new_image = Image.objects.create(image=image_file, text=extracted_text)
+            elif pdf_file:
+                extracted_text = pdfToString(pdf_file)
+                new_pdf = Image.objects.create(type_data='PDF', text=extracted_text)
+
+            return Response({'message': '파일 처리 완료', 'extracted_text': extracted_text}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
+            return Response({'error': '파일 처리 중 오류가 발생했습니다.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         
-        # 이미지 파일을 텍스트로 변환하는 로직 (여기서는 예시로 간단한 처리만 진행)
-        # 실제로는 OCR 라이브러리를 사용하여 이미지에서 텍스트를 추출할 수 있습니다.
-        # 예: pytesseract.image_to_string(Image.open(image_file))
-        if image_file:
-            extracted_text = imageToString(image_file)
-            new_image = Image.objects.create(image=image_file, text=extracted_text)
-        elif pdf_file:
-            extracted_text = pdfToString(pdf_file)
-            pdf_message = Image.objects.create(type_data='PDF',text=extracted_text)
-
-        
-        return Response({'message': '이미지 처리 완료', 'extracted_text': extracted_text}, status=status.HTTP_200_OK)
+        #return Response({'message': '이미지 처리 완료', 'extracted_text': extracted_text}, status=status.HTTP_200_OK)

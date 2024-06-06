@@ -16,27 +16,35 @@ from datetime import timedelta
 
 import pymysql  
 pymysql.install_as_MySQLdb()
-
+from dotenv import load_dotenv
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = '/media/'
 
-APPEND_SLASH=False
 
+APPEND_SLASH=False
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-8c%e*g%tfk^(!5ycb63p$&9+&w3zf!*sukl&o0$8__wfm-ig#u'
+# .env 파일의 경로를 지정 (경로가 다를 수 있으니 확인 필요)
+dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+load_dotenv(dotenv_path)
+
+# 이제 os.getenv를 사용하여 SECRET_KEY를 로드
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
+
+ALLOWED_HOSTS = ['13.210.178.148']
 
 ALLOWED_HOSTS = ['*']
+
 SITE_ID=1
 
 TEMPLATES = [
@@ -189,7 +197,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
-
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
