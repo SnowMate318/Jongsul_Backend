@@ -28,8 +28,6 @@ MEDIA_URL = '/media/'
 APPEND_SLASH=False
 
 
-
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
@@ -44,7 +42,6 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = False
 
 ALLOWED_HOSTS = ['13.210.178.148']
-
 
 ALLOWED_HOSTS = ['*']
 
