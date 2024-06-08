@@ -45,6 +45,11 @@ class DirectorySerializer(serializers.ModelSerializer):
         model = Directory
         fields = ('id','library', 'last_successed', 'concept', 'title', 'question_type')
     
+class SmallDirectorySerializer(serializers.ModelSerializer):
+        
+        class Meta:
+            model = Directory
+            fields = ('id','library', 'concept', 'title', 'directory_last_access')
 
 class SharedWithTagAndUserWithDirectorySerializer(serializers.ModelSerializer):
     user = MiniUserSerializer(read_only=True)
@@ -63,7 +68,7 @@ class LibrarySerializer(serializers.ModelSerializer):
     
 
 class LibraryWithDirectorySerializer(serializers.ModelSerializer):
-    directories = DirectorySerializer(many=True)
+    directories = SmallDirectorySerializer(many=True)
     class Meta:
         model = Library
         fields = ('id', 'title', 'library_last_access', 'directories')

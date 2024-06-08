@@ -4,8 +4,8 @@ from rest_framework import viewsets
 from rest_framework import views 
 from rest_framework.filters import OrderingFilter
 from .models import User, SharedTag, Shared, Library, Directory, Question, Choice, Image
-from .serializers import UserSerializer, SharedOnlySerializer, SharedTagSerializer, SharedWithTagAndUserWithDirectorySerializer, LibrarySerializer, LibraryWithDirectorySerializer, DirectorySerializer, QuestionSerializer
-from .serializers import ChoiceSerializer, QuestionAndChoiceSerializer
+from .serializers import UserSerializer, SharedOnlySerializer, SharedTagSerializer, SharedWithTagAndUserWithDirectorySerializer, LibraryWithDirectorySerializer, DirectorySerializer, QuestionSerializer
+from .serializers import ChoiceSerializer, QuestionAndChoiceSerializer, LibraryWithDirectorySerializer #, LibrarySerializer, 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 
 from rest_framework import status
@@ -297,9 +297,17 @@ class LibraryAPIView(views.APIView):
     def get(self, request):
         user = request.user
         libraries = Library.objects.filter(user=user)    
-        serializer = LibrarySerializer(libraries, many=True)
+        serializer = LibraryWithDirectorySerializer(libraries, many=True)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+# class LibraryWithDirectoryAPIView(views.APIView):
+#     def get(self, request):
+#         user = request.user
+#         libraries = Library.objects.filter(user=user)    
+#         serializer = LibraryWithDirectorySerializer(libraries, many=True)
+        
+#         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class LibraryDetailAPIView(views.APIView):
     permission_classes = [IsAuthenticated]
