@@ -4,8 +4,8 @@ from rest_framework import viewsets
 from rest_framework import views 
 from rest_framework.filters import OrderingFilter
 from .models import User, SharedTag, Shared, Library, Directory, Question, Choice, Image
-from .serializers import UserSerializer, SharedOnlySerializer, SharedTagSerializer, SharedWithTagAndUserWithDirectorySerializer, LibrarySerializer, LibraryWithDirectorySerializer, DirectorySerializer, QuestionSerializer
-from .serializers import ChoiceSerializer, QuestionAndChoiceSerializer
+from .serializers import UserSerializer, SharedOnlySerializer, SharedTagSerializer, SharedWithTagAndUserWithDirectorySerializer, LibraryWithDirectorySerializer, DirectorySerializer, QuestionSerializer
+from .serializers import ChoiceSerializer, QuestionAndChoiceSerializer, LibraryWithDirectorySerializer #, LibrarySerializer, 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 
 from rest_framework import status
@@ -170,10 +170,14 @@ class FindEmailView(views.APIView):
 
 
 # /shared/, get(커뮤니티 조회)    
-class SharedAPIView(views.APIView):    
+class SharedAPIView(views.APIView):
+      # 기본 정렬 순서    
     def get(self, request):
         tags = request.query_params.get('tags', None)
         user = request.query_params.get('user', None)
+        ordering = request.query_params.get('ordering', '-shared_upload_datetime')
+        
+        
         # 
         if tags:
             tags_list = tags.split(',')  # 쉼표로 구분된 문자열을 리스트로 변환
@@ -182,12 +186,12 @@ class SharedAPIView(views.APIView):
                 q_objects = Q(sharedtag__name__in=tags_list, is_activated = True, is_deleted = False, user_id = user)
             else:
                 q_objects = Q(sharedtag__name__in=tags_list, is_activated = True, is_deleted = False)
-            shareds = Shared.objects.filter(q_objects).distinct()
+            shareds = Shared.objects.filter(q_objects).distinct().order_by(ordering)
         else:
             if user:
-                shareds = Shared.objects.filter(is_activated = True, is_deleted = False, user_id = user)
+                shareds = Shared.objects.filter(is_activated = True, is_deleted = False, user_id = user).order_by(ordering)
             else: 
-                shareds = Shared.objects.filter(is_activated = True, is_deleted = False)
+                shareds = Shared.objects.filter(is_activated = True, is_deleted = False).order_by(ordering)
         
         
         
@@ -286,6 +290,7 @@ class SharedDownloadAPIView(views.APIView):
 
 # /library/ post(라이브러리 생성), get(전체 라이브러리 조회)
 class LibraryAPIView(views.APIView):
+    
     permission_classes = [IsAuthenticated]
     def post(self, request):
         title = request.data.get("title")
@@ -296,10 +301,20 @@ class LibraryAPIView(views.APIView):
         return Response({'message': '새로운 라이브러리가 생성되었습니다'},status=status.HTTP_201_CREATED)
     def get(self, request):
         user = request.user
-        libraries = Library.objects.filter(user=user)    
-        serializer = LibrarySerializer(libraries, many=True)
+        ordering = request.query_params.get('ordering', '-library_last_access')
+        libraries = Library.objects.filter(user=user).order_by(ordering)    
         
+        
+        serializer = LibraryWithDirectorySerializer(libraries, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+# class LibraryWithDirectoryAPIView(views.APIView):
+#     def get(self, request):
+#         user = request.user
+#         libraries = Library.objects.filter(user=user)    
+#         serializer = LibraryWithDirectorySerializer(libraries, many=True)
+        
+#         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class LibraryDetailAPIView(views.APIView):
     permission_classes = [IsAuthenticated]
@@ -376,6 +391,7 @@ class DirectoryAPIView(views.APIView):
     def get(self, request, library_id):
         user = request.user
         library = get_object_or_404(Library, user=user, id=library_id)
+        ordering = request.query_params.get('ordering', '-directory_last_access')
         directories = Directory.objects.filter(library = library_id, is_deleted=False)
         serializer = DirectorySerializer(directories, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
