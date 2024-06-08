@@ -38,7 +38,7 @@ class MiniUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'email','user_name','profile')
-
+ 
 class DirectorySerializer(serializers.ModelSerializer):
     
     class Meta:

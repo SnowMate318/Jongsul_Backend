@@ -364,7 +364,7 @@ def getQuestions(script, difficulty, multiple_choice, short_answer, ox_prob, all
     print("-----------------")
     print(cb)
         
-    return res
+    return questions_dict
 
 
 
