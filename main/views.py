@@ -5,7 +5,7 @@ from rest_framework import views
 from rest_framework.filters import OrderingFilter
 from .models import User, SharedTag, Shared, Library, Directory, Question, Choice, Image
 from .serializers import UserSerializer, SharedOnlySerializer, SharedTagSerializer, SharedWithTagAndUserWithDirectorySerializer, LibraryWithDirectorySerializer, DirectorySerializer, QuestionSerializer
-from .serializers import ChoiceSerializer, QuestionAndChoiceSerializer, LibraryWithDirectorySerializer #, LibrarySerializer, 
+from .serializers import ChoiceSerializer, QuestionAndChoiceSerializer, LibraryWithDirectorySerializer , SmallDirectorySerializer#, LibrarySerializer, 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 
 from rest_framework import status
@@ -360,7 +360,7 @@ class DirectoryAPIView(views.APIView):
             all_prob = request.data.get('all_prob')
             
             try:
-                questions = getQuestions(script, difficulty, multiple_choice, short_answer, ox_prob, all_prob)['question']
+                questions = getQuestions(script, difficulty, multiple_choice, short_answer, ox_prob, all_prob)['questions']
                 if questions is None:
                     return Response({'message': 'GPT_API 관련 오류'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
                 
@@ -384,8 +384,8 @@ class DirectoryAPIView(views.APIView):
                                 choice_num=cho['choice_num'],
                                 choice_content=cho['choice_content']
                             )
-                
-                return Response({'message': '문제 생성 완료'}, status=status.HTTP_200_OK)
+                serializer = SmallDirectorySerializer(directory)
+                return Response(serializer.data, status=status.HTTP_200_OK)
             except Exception as e:
                 return Response({'message': f'An error occurred: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     def get(self, request, library_id):
