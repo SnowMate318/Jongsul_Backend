@@ -577,7 +577,9 @@ class FileAPIView(views.APIView):
     def post(self, request):
         # 사용자로부터 이미지 파일을 받습니다.
         image_file = request.FILES.get('image')
-        pdf_file = request.FILES.get('pdf')
+        pdf_file = request.FILES.get('file')
+        print(test)
+        print(request.accepted_media_type)
         if not image_file and not pdf_file:
             return Response({'error': '이미지 또는 PDF 파일이 제공되지 않았습니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
