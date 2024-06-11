@@ -23,3 +23,4 @@ SOCIALACCOUNT_PROVIDERS = {
     }
     
 }
+
