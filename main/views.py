@@ -133,6 +133,48 @@ class AuthAPIView(views.APIView):
             # 사용 불가능한 토큰일 때
             return Response({"message: 유효하지 않은 토큰입니다."},status=status.HTTP_400_BAD_REQUEST)
 
+class SocialAuthAPIView(views.APIView):
+    def post(self, request):
+        with transaction.atomic:
+            provider_id = request.data.get('provider_id')
+            if user_id is None or user_id == '':
+                return Response({"error": "user_id가 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+                
+            provider = request.data.get('provider')
+            if provider is None or provider == '':
+                return Response({"error": "provider가 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            email = request.data.get('email')
+            nickname = request.data.get('nickname')
+            
+            web_provider = WebProvider.objects.get(provider_id=provider_id, provider_type=provider)
+            
+            if web_provider is None:
+                user = User.objects.create(email=email, user_name=nickname)
+                WebProvider.objects.create(user=user, provider_id=provider_id, provider_type=provider)
+            else:
+                user = web_provider.user    
+            serializer = UserSerializer(user)
+            
+            token = TokenObtainPairSerializer.get_token(user)
+            refresh_token = str(token)
+            access_token = str(token.access_token)
+            
+            return Response(
+                {
+                    "user": serializer.data,
+                    "message": "login success",
+                    "token": {
+                        "access": access_token,
+                        "refresh": refresh_token,
+                    },
+                },
+                status=status.HTTP_200_OK,
+            )
+            
+            
+            
+
 # /auth/delete, delete(유저정보 삭제)        
 class UserDeleteView(views.APIView):
     def delete(self, request):
@@ -598,3 +640,4 @@ class FileAPIView(views.APIView):
 
         
         #return Response({'message': '이미지 처리 완료', 'extracted_text': extracted_text}, status=status.HTTP_200_OK)
+
