@@ -77,7 +77,7 @@ class Directory(models.Model):
     library = models.ForeignKey(Library, related_name = 'directories', on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name = 'directories', on_delete=models.CASCADE)
     last_successed = models.IntegerField(null=True)
-    concept = models.CharField(max_length=2000, null=True)
+    concept = models.CharField(max_length=8000, null=True)
     title = models.CharField(max_length=30)
     question_type = models.CharField(max_length=100, null=True, blank=True)
     directory_last_access = models.DateTimeField(auto_now=True)

@@ -408,7 +408,8 @@ class DirectoryAPIView(views.APIView):
                 
                 library = get_object_or_404(Library, id=library_id)
                 directory = Directory.objects.create(library=library, title=title, user=request.user)
-                
+                directory.concept = script
+                directory.save()
                 for ques in questions:
                     question = Question.objects.create(
                         directory=directory, 
@@ -599,6 +600,15 @@ class QuestionSolveAPIView(views.APIView):
         
         return Response({'message': '문제를 풀었습니다.', "ls":last_solved},status=status.HTTP_200_OK)        
 
+class QuestionAllSolveAPIView(views.APIView):
+    permission_classes = [IsAuthenticated]
+    def patch(self, request, directory_id):
+        last_solved = request.data.get('last_solved')
+        directory = get_object_or_404(Directory, pk=directory_id)
+        directory.questions.update(last_solved=last_solved)
+        
+        return Response({'message': '문제 풀이를 완료했습니다'}, status=status.HTTP_200_OK)
+
 # 문제 스크랩
 # /question/<int:question_id>/scrap/
 class QuestionScrapAPIView(views.APIView):
@@ -613,31 +623,4 @@ class QuestionScrapAPIView(views.APIView):
         
         return Response({'message': '스크랩 성공했습니다.'},status=status.HTTP_200_OK)          
 
-class FileAPIView(views.APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        # 사용자로부터 이미지 파일을 받습니다.
-        image_file = request.FILES.get('image')
-        pdf_file = request.FILES.get('file')
-        print(test)
-        print(request.accepted_media_type)
-        if not image_file and not pdf_file:
-            return Response({'error': '이미지 또는 PDF 파일이 제공되지 않았습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            if image_file:
-                extracted_text = imageToString(image_file)
-                new_image = Image.objects.create(image=image_file, text=extracted_text)
-            elif pdf_file:
-                extracted_text = pdfToString(pdf_file)
-                new_pdf = Image.objects.create(type_data='PDF', text=extracted_text)
-
-            return Response({'message': '파일 처리 완료', 'extracted_text': extracted_text}, status=status.HTTP_200_OK)
-        except Exception as e:
-            print(e)
-            return Response({'error': '파일 처리 중 오류가 발생했습니다.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        
-        #return Response({'message': '이미지 처리 완료', 'extracted_text': extracted_text}, status=status.HTTP_200_OK)
 
