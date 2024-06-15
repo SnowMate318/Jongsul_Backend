@@ -3,7 +3,7 @@ from .views import RegisterAPIView, AuthAPIView, SharedAPIView, SharedDetailAPIV
 from .views import UserDeleteView, SharedUserFilteredAPIView, QuestionAPIView, QuestionDetailAPIView
 from .views import  DirectoryAPIView, DirectoryDetailAPIView, DirectoryShareAPIView, LibraryChangeAPIView
 from .views import QuestionSolveAPIView, QuestionScrapAPIView, QuestionsTestAPIView 
-from .views import LibraryAPIView, LibraryDetailAPIView, FileAPIView
+from .views import LibraryAPIView, LibraryDetailAPIView
 from rest_framework import routers
 from .views import FindEmailView
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -51,5 +51,4 @@ urlpatterns =[
     path("question/<int:question_id>/", QuestionDetailAPIView.as_view()),
     path("question/<int:question_id>/solve/", QuestionSolveAPIView.as_view()),
     path("question/<int:question_id>/scrap/", QuestionScrapAPIView.as_view()),
-    path("file/", FileAPIView.as_view()),
 ]
