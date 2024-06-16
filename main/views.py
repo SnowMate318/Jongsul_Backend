@@ -615,12 +615,26 @@ class QuestionScrapAPIView(views.APIView):
     permission_classes = [IsAuthenticated]
     def patch(self, request, question_id):
         
-        is_scrapped = request.data.get('is_scrapped')
-        question = get_object_or_404(Question, pk=question_id)
-        user = request.user
-        question.is_scrapped = is_scrapped
-        question.save()
-        
+        with transaction.atomic():
+            is_scrapped = request.data.get('is_scrapped')
+            dir_name = request.data.get('dir_name')
+            
+            question = get_object_or_404(Question, pk=question_id)
+            user = request.user
+            
+            question.is_scrapped = is_scrapped
+            question.save()
+            
+            if is_scrapped:
+                library, created = Library.objects.get_or_create(user=user, title="스크랩한 문제들")
+                directory, created = Directory.objects.get_or_create(user=user, library=library, title=dir_name)
+                scrapped_question  = Question.objects.create(directory=directory, question_num=question.question_num, question_title=question.question_title, question_content=question.question_content, question_answer=question.question_answer, question_explanation=question.question_explanation, question_type=question.question_type, is_scrapped=True)
+                scrapped_choices = Choice.objects.filter(question=question)
+                for scrapped_choice in scrapped_choices:
+                    Choice.objects.create(question=scrapped_question, choice_num=scrapped_choice.choice_num, choice_content=scrapped_choice.choice_content)
+            else: # 스크랩 취소
+                scrapped_question = Question.objects.get(directory=directory, question_num=question.question_num)
+                scrapped_question.delete()
         return Response({'message': '스크랩 성공했습니다.'},status=status.HTTP_200_OK)          
 
 
