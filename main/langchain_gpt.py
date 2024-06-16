@@ -46,260 +46,10 @@ class Question(BaseModel):
         
 class Questions(BaseModel):
     """생성한 문제 리스트를 제공"""
-    questions: List[Question]
-    
-class Example(TypedDict):
-    """A representation of an example consisting of text input and expected tool calls.
+    questions: List[Question] = Field(description="생성한 문제 리스트")
 
-    For extraction, the tool calls are represented as instances of pydantic model.
-    """
-
-    input: str  # This is the example text
-    tool_calls: List[BaseModel]  # Instances of pydantic model that should be extracted
-
-
-# def tool_example_to_messages(example: Example) -> List[BaseMessage]:
-#     """Convert an example into a list of messages that can be fed into an LLM.
-
-#     This code is an adapter that converts our example to a list of messages
-#     that can be fed into a chat model.
-
-#     The list of messages per example corresponds to:
-
-#     1) HumanMessage: contains the content from which content should be extracted.
-#     2) AIMessage: contains the extracted information from the model
-#     3) ToolMessage: contains confirmation to the model that the model requested a tool correctly.
-
-#     The ToolMessage is required because some of the chat models are hyper-optimized for agents
-#     rather than for an extraction use case.
-#     """
-#     messages: List[BaseMessage] = [HumanMessage(content=example["input"])]
-#     openai_tool_calls = []
-#     for tool_calls in example["tool_calls"]:
-#         for tool_call in tool_calls:
-#             openai_tool_calls.append(
-#             {
-#                 "id": str(uuid.uuid4()),
-#                 "type": "function",
-#                 "function": {
-#                     "name": tool_call.__class__.__name__,
-#                     "arguments": tool_call.json(),
-#                 },
-#             }
-#         )
-#     messages.append(
-#         AIMessage(content="", additional_kwargs={"tool_calls": openai_tool_calls})
-#     )
-#     tool_outputs = example.get("tool_outputs") or [
-#         "You have correctly called this tool."
-#     ] * len(openai_tool_calls)
-#     for output, tool_call in zip(tool_outputs, openai_tool_calls):
-#         messages.append(ToolMessage(content=output, tool_call_id=tool_call["id"]))
-#     return messages
-
-            
 def getQuestions(script, difficulty, multiple_choice, short_answer, ox_prob, all_prob):
- 
-    
-    # examples = [
-    #     (
-    #         f''' 
-    #             개념: {concept1}, 
-    #             난이도: {5},
-    #             문제갯수: 객관식 {2}문제, 단답형 {1}문제, ox문제 {0}문제.
-    #         ''',
-    #         [      
-    #             Question(
-    #                 question_num=1,
-    #                 question_title='어플리케이션 레이어에서 네트워크 어플리케이션의 목적은 무엇인가요?',
-    #                 question_type=1,
-    #                 choices=[
-    #                     Choice(choice_num=1,choice_content='호스트 간의 물리적 연결을 담당합니다.'),
-    #                     Choice(choice_num=2, choice_content='어플리케이션 서비스를 전달하는 레이어입니다.'),
-    #                     Choice(choice_num=3, choice_content='데이터 전송 속도를 조절하는 역할을 합니다.'),
-    #                     Choice(choice_num=4, choice_content='보안 기능을 제공합니다.')
-    #                     ], 
-    #                 question_answer='2', 
-    #                 question_explanation='어플리케이션 레이어는 호스트가 어플리케이션 서비스를 전달하는 목적의 레이어입니다.'
-    #             ), 
-    #             Question(
-    #                 question_num=2, 
-    #                 question_title='TCP와 UDP의 차이점은 무엇인가요?', 
-    #                 question_type=1, 
-    #                 choices=[
-    #                     Choice(choice_num=1, choice_content='TCP는 신뢰성 있는 전송을 제공하고, UDP는 신뢰성 없는 전송을 제공합니다.'), 
-    #                     Choice(choice_num=2, choice_content='TCP는 흐름 제어와 혼잡 제어를 제공하지만, UDP는 제공하지 않습니다.'), 
-    #                     Choice(choice_num=3, choice_content='TCP는 연결 지향적이지만, UDP는 연결 지향적이지 않습니다.'), 
-    #                     Choice(choice_num=4, choice_content='TCP는 데이터 전송 속도를 제어하지만, UDP는 제어하지 않습니다.')
-    #                 ], 
-    #                 question_answer='1', 
-    #                 question_explanation='TCP는 신뢰성 있는 전송을 제공하고 데이터의 손실이나 손상을 보장하며, UDP는 신뢰성 없는 전송을 제공합니다.'
-    #             ), 
-    #             Question(
-    #                 question_num=3, 
-    #                 question_title='TCP와 UDP 중 어떤 프로토콜이 연결 설정 요구를 가지고 있나요?', 
-    #                 question_type=2, 
-    #                 choices=[], 
-    #                 question_answer='TCP', 
-    #                 question_explanation='TCP는 데이터 전송 전에 클라이언트와 서버 간의 연결 설정을 요구합니다.'
-    #             )
-    #         ]
-    #     ),  
-    #     (
-    #         f''' 
-    #             개념: {concept1}, 
-    #             난이도: {5},
-    #             문제갯수: 객관식 {3}문제, 단답형 {1}문제, ox문제 {2}문제.
-    #         ''',
-    #         [
-    #             Question(
-    #                 question_num=1,
-    #                 question_title='어플리케이션 레이어에서 네트워크 어플리케이션의 목적은 무엇인가요?',
-    #                 question_type=1,
-    #                 choices=[
-    #                     Choice(choice_num=1, choice_content='호스트 간의 물리적 연결을 담당합니다.'),
-    #                     Choice(choice_num=2, choice_content='어플리케이션 서비스를 전달하는 레이어입니다.'),
-    #                     Choice(choice_num=3, choice_content='데이터의 무결성을 유지합니다.'),
-    #                     Choice(choice_num=4, choice_content='네트워크 보안을 담당합니다.')
-    #                     ], 
-    #                 question_answer='2', 
-    #                 question_explanation='어플리케이션 레이어는 호스트가 어플리케이션 서비스를 전달하는 목적의 레이어입니다.'
-    #             ), 
-    #             Question(
-    #                 question_num=2, 
-    #                 question_title='TCP와 UDP의 차이점은 무엇인가요?', 
-    #                 question_type=1, 
-    #                 choices=[
-    #                     Choice(choice_num=1, choice_content='TCP는 연결 지향적이고 신뢰성 있는 전송을 제공하며, UDP는 신뢰성 없는 데이터 전송을 제공합니다.'), 
-    #                     Choice(choice_num=2, choice_content='TCP는 혼잡 제어를 제공하지만, UDP는 혼잡 제어를 제공하지 않습니다.'), 
-    #                     Choice(choice_num=3, choice_content='TCP는 데이터 손실이나 손상에 대한 보장을 제공하지 않지만, UDP는 데이터의 순서를 보장합니다.'), 
-    #                     Choice(choice_num=4, choice_content='TCP는 흐름 제어를 제공하지만, UDP는 흐름 제어를 제공하지 않습니다.')
-    #                 ], 
-    #                 question_answer='1', 
-    #                 question_explanation='TCP는 연결 지향적이고 신뢰성 있는 전송을 제공하며, UDP는 신뢰성 없는 데이터 전송을 제공합니다.'
-    #             ), 
-    #             Question(
-    #                 question_num=3, 
-    #                 question_title='어플리케이션 레이어에서 사용되는 프로토콜을 정의하는 공개 문서는 무엇인가요?', 
-    #                 question_type=1, 
-    #                 choices=[
-    #                     Choice(choice_num=1, choice_content='HTTP'), 
-    #                     Choice(choice_num=2, choice_content='SMTP'), 
-    #                     Choice(choice_num=3, choice_content='RCF'), 
-    #                     Choice(choice_num=4, choice_content='UDP')
-    #                 ], 
-    #                 question_answer='3', 
-    #                 question_explanation='어플리케이션 레이어에서 사용되는 프로토콜을 정의하는 공개 문서는 RCF와 같은 문서입니다.'
-    #             ), 
-    #             Question(
-    #                 question_num=4, 
-    #                 question_title='어플리케이션 레이어에서 프로세스를 구분하기 위해 사용되는 것은 무엇인가요?', 
-    #                 question_type=2, 
-    #                 choices=[], 
-    #                 question_answer='포트 번호', 
-    #                 question_explanation='어플리케이션 레이어에서 프로세스를 구분하기 위해 포트 번호가 사용됩니다.'
-    #             ), 
-    #             Question(
-    #                 question_num=5, 
-    #                 question_title='TCP는 혼잡 제어를 제공하지 않는다.(O/X)', 
-    #                 question_type=3, 
-    #                 choices=[], 
-    #                 question_answer='X', 
-    #                 question_explanation='TCP는 혼잡 제어를 제공합니다.'
-    #             ), 
-    #             Question(
-    #                 question_num=6, 
-    #                 question_title='P2P는 서버-클라이언트 구조를 가지고 있다.(O/X)', 
-    #                 question_type=3, 
-    #                 choices=[], 
-    #                 question_answer='X', 
-    #                 question_explanation='P2P는 서버-클라이언트 구조를 가지고 있지 않습니다.'
-    #             )
-    #         ]
-    #     ),
-    #     (
-    #         f''' 
-    #             개념: {concept2}, 
-    #             난이도: {7},
-    #             문제갯수: 객관식 {1}문제, 단답형 {1}문제, ox문제 {2}문제.
-    #         ''',
-    #         [
-    #             Question(
-    #                 question_num=1, 
-    #                 question_title='소프트웨어 공학의 목표 중 하나는 무엇인가요?', 
-    #                 question_type=1, 
-    #                 choices=[
-    #                     Choice(choice_num=1, choice_content='복잡도 증가'), 
-    #                     Choice(choice_num=2, choice_content='비용 최대화'), 
-    #                     Choice(choice_num=3, choice_content='개발기간 단축'), 
-    #                     Choice(choice_num=4, choice_content='품질 저하')
-    #                 ], 
-    #                 question_answer='3', 
-    #                 question_explanation='소프트웨어 공학의 목표 중 하나는 개발기간을 단축하는 것입니다.'
-    #             ), 
-    #             Question(
-    #                 question_num=2, 
-    #                 question_title='소프트웨어 공학의 주제 중 하나는 무엇인가요?', 
-    #                 question_type=2, 
-    #                 choices=[], 
-    #                 question_answer='단계적 프로세스', 
-    #                 question_explanation='소프트웨어 공학의 주제 중 하나는 단계적 프로세스입니다.'
-    #             ), 
-    #             Question(
-    #                 question_num=3, 
-    #                 question_title='소프트웨어의 노동집약성은 노동이 많이 필요하다는 의미다.(O/X)', 
-    #                 question_type=3, 
-    #                 choices=[], 
-    #                 question_answer='O', 
-    #                 question_explanation='소프트웨어의 노동집약성은 노동이 많이 필요하다는 의미입니다.'
-    #             ),
-    #             Question(
-    #                 question_num=4, 
-    #                 question_title='소프트웨어의 복제 가능성은 극히 적은 비용으로 복제 가능한 특성을 가지고 있다.(O/X)', 
-    #                 question_type=3, 
-    #                 choices=[], 
-    #                 question_answer='O', 
-    #                 question_explanation='소프트웨어는 극히 적은 비용으로 복제 가능한 특성을 가지고 있습니다.'
-    #             )
-    #         ]
-    #     ),
-    #     (
-    #         f''' 
-    #             개념: {concept2}, 
-    #             난이도: {7},
-    #             문제갯수: 객관식 {1}문제, 단답형 {1}문제, ox문제 {0}문제.
-    #         ''',
-    #         [
-    #             Question(
-    #                 question_num=1, 
-    #                 question_title="소프트웨어 공학의 주제 중 '품질 보증'은 무엇을 확인하는 작업인가요?", 
-    #                 question_type=1, 
-    #                 choices=[
-    #                     Choice(choice_num=1, choice_content='개발작업의 적절한 수행 여부'), 
-    #                     Choice(choice_num=2, choice_content='프로젝트 일정'), 
-    #                     Choice(choice_num=3, choice_content='소프트웨어 설계'), 
-    #                     Choice(choice_num=4, choice_content='테스팅 결과')
-    #                 ], 
-    #                 question_answer='1', 
-    #                 question_explanation='소프트웨어의 품질 보증은 개발작업의 적절한 수행 여부를 확인하는 작업입니다.'
-    #             ), 
-    #             Question(
-    #                 question_num=2, 
-    #                 question_title="소프트웨어 공학의 제약사항 중 '더 빠르고 싸게 개발하도록 다른 기업과 경쟁'은 어떤 제약사항에 해당하나요?", 
-    #                 question_type=2, 
-    #                 choices=[], 
-    #                 question_answer='경쟁', 
-    #                 question_explanation="소프트웨어 공학의 제약사항 중 '더 빠르고 싸게 개발하도록 다른 기업과 경쟁'은 경쟁에 해당합니다."
-    #             )
-    #         ]
-    #         ),   
-    # ]
-    messages = []
 
-    # for text, tool_call in examples:
-    #     messages.extend(
-    #         tool_example_to_messages({"input": text, "tool_calls": [tool_call]})
-    #     )
     gpt_model = "gpt-3.5-turbo-0125"
     #gpt_model = "gpt-4"
     model = ChatOpenAI(model=gpt_model, openai_api_key=OPENAI_API_KEY, temperature=0).bind_tools([])
@@ -307,28 +57,28 @@ def getQuestions(script, difficulty, multiple_choice, short_answer, ox_prob, all
     prompt = ChatPromptTemplate.from_messages(
         [
             ("system", 
-            "당신은 입력한 개념을 바탕으로 문제를 생성해주는 알고리즘입니다."
+            "당신은 입력한 개념을 바탕으로 사용자가 입력한 문제 수 만큼 문제를 생성해주는 알고리즘입니다."
             "output is in Korean"
             "사용자로부터 다음과 같은 정보를 입력받습니다."
             
-            "예를 들어보겠습니다."
-            f''' 
-            개념: {concept4}, 
-                난이도: 7,
-                문제갯수: 객관식 2문제, 단답형 3문제, OX문제 2문제.
-            '''
-            "사용자가 이렇게 입력을 하였을 때, 다음과 같은 과정을 거칩니다."
-            "STEP 1: 사용자가 입력한 개념을 이해한 후, 주제를 파악합니다. 이 예시에서는 컴퓨터 메모리와, 어드레싱모드, RISC, CISC에 대한 주제임을 파악합니다."
+            "그 후, 다음과 같은 과정을 거칩니다."
+            "STEP 1: 사용자가 입력한 개념의 주제를 파악합니다."
             "STEP 2: 이 주제 대해 당신이 알고있는 지식과, 개념 내용을 바탕으로 문제 생성을 준비합니다."
-            "STEP 3: 난이도 7에 해당하는 문제를 생성하기 위해 문제 생성을 준비합니다."
-            "STEP 4:, 객관식 문제 2문제를 생성합니다. 반드시 생성하는 문제 수를 지켜야 합니다."
-            "객관식 문제를 생성할 때, 제공되는 선택지 리스트는 반드시 4개의 선택지가 되어야 합니다. 또한, 사용자가 옳은 답을 고르도록 생성해야 합니다."
-            "STEP 5, 단답형 문제 3문제를 생성합니다. 반드시 생성하는 문제 수를 지켜야 합니다."
+            "STEP 3: 사용자가 입력한 난이도에 해당하는 문제를 생성하기 위해 문제 생성을 준비합니다."
+            
+            "STEP 4:, 객관식 문제를 생성합니다. "
+            "객관식 문제는 반드시 4개의 선택지가 제공되어야 합니다."
+            
+            "STEP 5, 단답형 문제를 생성합니다." 
             "단답형 문제를 생성할 때, 제공되는 선택지 리스트는 반드시 빈 리스트가 되어야 합니다. 또한, 사용자가 한 단어로 대답하도록 생성해야 합니다."
-            "STEP 6: OX문제 2문제를 생성합니다. 반드시 생성하는 문제 수를 지켜야 합니다."
-            "OX문제를 생성할 때, 제공되는 선택지 리스트는 반드시 빈 리스트가 되어야 합니다. 또한, 사용자가 O 또는 X로 대답하도록 생성해야 합니다."
-            "STEP 7: 생성한 문제 갯수가 사용자가 요구한 문제 갯수와 일치하는지 확인합니다. 이 예시에서는 '문제갯수: 객관식 2문제, 단답형 3문제, OX문제 2문제.'라고 요구하였으므로, 객관식 2문제, 단답형 3문제, OX문제 2문제를 생성하여 총 7문제를 생성하는지 확인해야 합니다."
-            "STEP 8: 생성한 문제에 대한 정답과 해설을 제공합니다."
+            
+            "STEP 6: OX 문제를 생성합니다. "
+            "OX문제는 개념과 관련된 문장이 문제 제목으로 주어지며, 문장의 끝은 '(O/X)'로 마무리되어야 합니다. 제목은 반드시 참 거짓을 판단할 수 있는 문장으로 생성되어야 합니다."
+            "몇 가지 예를 들어보겠습니다. question_title: 'UDP는 데이터의 신뢰성을 보장하지 않는다. (O/X)' valid: true    question_title: 'TCP 프로토콜은 어떤 특징을 가지고 있나요? (O/X)' valid: false   question_title: 'RISC는 비교적 많은 수의 명령어를 가지고 있다. (O/X)' valid: true   question_title:'다중 버스 구조는 레지스터와 메모리 간의 데이터 전송을 어떻게 처리하는가? (O/X)', valid: false" 
+            "제공되는 선택지 리스트는 반드시 빈 리스트가 되어야 합니다."
+            "몇 가지 예를 들어보겠습니다. question_title:'간접 주소 모드에서는 명령어의 주소 필드가 가리키는 주소에는 유효주소가 있다. (O/X)',choices: [], question_answer: 'O'  question_title:'RISC는 비교적 많은 수의 명령어를 가지고 있다. (O/X)',choices: [], question_answer: 'X' 이와 같은 형식으로 문제를 생성해야 합니다."
+            
+            "STEP 7: 생성한 문제에 대한 정답과 해설을 제공합니다."
             ), 
             #MessagesPlaceholder("examples"),
             ("user", "{input}")]
@@ -343,7 +93,10 @@ def getQuestions(script, difficulty, multiple_choice, short_answer, ox_prob, all
                 "input": f''' 
                 개념: {script}, 
                 난이도: {difficulty},
-                문제갯수: 객관식 {multiple_choice}문제, 단답형 {short_answer}문제, OX문제 {ox_prob}문제.
+                생성할 전체 문제 수: {all_prob},
+                생성할 객관식 문제 수: {multiple_choice},
+                생성할 단답형 문제 수: {short_answer},
+                생성할 OX문제 수: {ox_prob}
                 ''',
                 #"examples": messages,
                 })
@@ -380,36 +133,6 @@ def getQuestions(script, difficulty, multiple_choice, short_answer, ox_prob, all
     print(cb)
         
     return questions_dict
-
-
-
-
-
-
-
-
-
-# ''' 
-#                 개념: (script), 
-#                 난이도: (difficulty),
-#                 문제갯수: 객관식 (multiple_choice)문제, 단답형 (short_answer)문제, OX문제 (ox_prob)문제.
-#             '''
-#             "여기서 (script)는 생성할 문제와 관련된 개념입니다. string 타입으로 입력해야 합니다."
-#             "(difficulty)는 1~10까지의 난이도를 입니다. 1은 쉬운 문제, 10은 어려운 문제입니다. int 타입으로 입력해야 합니다."
-#             "(multiple_choice)는 생성할 객관식 문제의 갯수입니다. int 타입으로 입력해야 합니다."
-#             "(short_answer)는 생성할 단답형 문제의 갯수입니다. int 타입으로 입력해야 합니다."
-#             "(ox_prob)는 생성할 OX문제의 갯수입니다. int 타입으로 입력해야 합니다."
-#             "사용자 입력에 응답하려면 다음과 같은 지침을 따르십시오."
-#             "STEP 1: 사용자가 입력한 (script)에 대해 이해하고, 이 (script)의 주제를 파악하십시오."
-#             "STEP 2: (script)의 주제를 파악한 후, 해당 스크립트와 파악한 주제를 기반으로 문제 생성을 준비하십시오."
-#             "STEP 3: (difficulty)로 난이도를 파악하고, 해당 난이도에 맞는 문제 생성을 준비하십시오."
-#             "STEP 4: (multiple_choice)개의 객관식 문제를 반드시 생성하십시오. 단, 객관식 문제는 4지선다형 문제로 생성하십시오."
-#             "여기서, 객관식 문제는 문제에 대해 4개의 선택지를 제시한 후, 사용자가 옳은 답을 고르는 형식의 문제입니다."
-#             "STEP 5: (short_answer)개의 단답형 문제를 반드시 생성하십시오. 단, 단답형 문제는 사용자가 한 단어로 대답하도록 생성하십시오."
-#             "여기서, 단답형 문제는 어떤 개념에 대한 설명을 제시한 후 설명에 해당하는 개념을 한 단어로 대답하는 형식의 문제입니다."
-#             "STEP 6: (ox_prob)개의 OX문제를 반드시 생성하십시오. 단, OX문제는 사용자가 O 또는 X로 대답하도록 생성하십시오."
-#             "여기서 OX문제는 참 또는 거짓인 문장을 제시한 후, 해당 문장이 옳은 문장이면 O, 틀린 문장이면 X로 대답하는 형식의 문제입니다."
-#             "STEP 7: 생성한 문제에 대한 정답과 해설을 제공하십시오."
 
 
 
@@ -683,4 +406,4 @@ Immediate 모드
 컴파일러는 작지만 빠른 명령어를 사용
 
 '''
-getQuestions(concept4, 7, 2, 2, 1, 5)
+getQuestions(concept1, 7, 2, 2, 2, 6)
