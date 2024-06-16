@@ -16,9 +16,9 @@ from langchain_community.callbacks import get_openai_callback
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(script_dir, '../jongsul'))  # 상대 경로를 사용하여 jongsul 폴더를 시스템 경로에 추가
-from my_settings import OPENAI_API_KEY  # my_settings에서 OPENAI_API_KEY 가져오기
+from my_settings import OPENAI_API_KEY  # my_settings에서 OPENAI_API_KEY 가져오기 
 
-
+from langsmith import traceable
 
 class Choice(BaseModel):
     """선택지 번호와 선택지 내용을 제공"""
@@ -48,6 +48,7 @@ class Questions(BaseModel):
     """생성한 문제 리스트를 제공"""
     questions: List[Question] = Field(description="생성한 문제 리스트")
 
+@traceable
 def getQuestions(script, difficulty, multiple_choice, short_answer, ox_prob, all_prob):
 
     gpt_model = "gpt-3.5-turbo-0125"
@@ -75,7 +76,7 @@ def getQuestions(script, difficulty, multiple_choice, short_answer, ox_prob, all
             "STEP 6: OX 문제를 생성합니다. "
             "OX문제는 개념과 관련된 문장이 문제 제목으로 주어지며, 문장의 끝은 '(O/X)'로 마무리되어야 합니다. 제목은 반드시 참 거짓을 판단할 수 있는 문장으로 생성되어야 합니다."
             "몇 가지 예를 들어보겠습니다. question_title: 'UDP는 데이터의 신뢰성을 보장하지 않는다. (O/X)' valid: true    question_title: 'TCP 프로토콜은 어떤 특징을 가지고 있나요? (O/X)' valid: false   question_title: 'RISC는 비교적 많은 수의 명령어를 가지고 있다. (O/X)' valid: true   question_title:'다중 버스 구조는 레지스터와 메모리 간의 데이터 전송을 어떻게 처리하는가? (O/X)', valid: false" 
-            "제공되는 선택지 리스트는 반드시 빈 리스트가 되어야 합니다."
+            "제공되는 선택지 리스트는 반드시 빈 리스트가 되어야 합니다. 또한 question_answer는 무조건 'O' 또는 'X'로 설정되어야 합니다."
             "몇 가지 예를 들어보겠습니다. question_title:'간접 주소 모드에서는 명령어의 주소 필드가 가리키는 주소에는 유효주소가 있다. (O/X)',choices: [], question_answer: 'O'  question_title:'RISC는 비교적 많은 수의 명령어를 가지고 있다. (O/X)',choices: [], question_answer: 'X' 이와 같은 형식으로 문제를 생성해야 합니다."
             
             "STEP 7: 생성한 문제에 대한 정답과 해설을 제공합니다."
@@ -94,9 +95,9 @@ def getQuestions(script, difficulty, multiple_choice, short_answer, ox_prob, all
                 개념: {script}, 
                 난이도: {difficulty},
                 생성할 전체 문제 수: {all_prob},
-                생성할 객관식 문제 수: {multiple_choice},
-                생성할 단답형 문제 수: {short_answer},
-                생성할 OX문제 수: {ox_prob}
+                생성할 전체 문제 수 중 객관식 문제 수: {multiple_choice},
+                생성할 전체 문제 수 중 단답형 문제 수: {short_answer},
+                생성할 전체 문제 수 중 OX문제 수: {ox_prob}
                 ''',
                 #"examples": messages,
                 })
