@@ -67,13 +67,13 @@ def getQuestions(script, difficulty, multiple_choice, short_answer, ox_prob, all
             "STEP 2: 이 주제 대해 당신이 알고있는 지식과, 개념 내용을 바탕으로 문제 생성을 준비합니다."
             "STEP 3: 사용자가 입력한 난이도에 해당하는 문제를 생성하기 위해 문제 생성을 준비합니다."
             
-            "STEP 4:, 객관식 문제를 생성합니다. "
+            "STEP 4:, 객관식 문제를 생성합니다. 객관식 문제의 question_type는 반드시 1이 되어야 합니다."
             "객관식 문제는 반드시 4개의 선택지가 제공되어야 합니다."
             
-            "STEP 5, 단답형 문제를 생성합니다." 
+            "STEP 5, 단답형 문제를 생성합니다. question_type는 반드시 2가 되어야 합니다." 
             "단답형 문제를 생성할 때, 제공되는 선택지 리스트는 반드시 빈 리스트가 되어야 합니다. 또한, 사용자가 한 단어로 대답하도록 생성해야 합니다."
             
-            "STEP 6: OX 문제를 생성합니다. "
+            "STEP 6: OX 문제를 생성합니다. question_type는 반드시 3이 되어야 합니다."
             "OX문제는 개념과 관련된 문장이 문제 제목으로 주어지며, 문장의 끝은 '(O/X)'로 마무리되어야 합니다. 제목은 반드시 참 거짓을 판단할 수 있는 문장으로 생성되어야 합니다."
             "몇 가지 예를 들어보겠습니다. question_title: 'UDP는 데이터의 신뢰성을 보장하지 않는다. (O/X)' valid: true    question_title: 'TCP 프로토콜은 어떤 특징을 가지고 있나요? (O/X)' valid: false   question_title: 'RISC는 비교적 많은 수의 명령어를 가지고 있다. (O/X)' valid: true   question_title:'다중 버스 구조는 레지스터와 메모리 간의 데이터 전송을 어떻게 처리하는가? (O/X)', valid: false" 
             "제공되는 선택지 리스트는 반드시 빈 리스트가 되어야 합니다. 또한 question_answer는 무조건 'O' 또는 'X'로 설정되어야 합니다."
