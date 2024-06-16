@@ -38,13 +38,26 @@ class MiniUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'email','user_name','profile')
+ 
+class DirectorySerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Directory
+        fields = ('id','library', 'last_successed', 'concept', 'title', 'question_type')
+    
+class SmallDirectorySerializer(serializers.ModelSerializer):
+        
+        class Meta:
+            model = Directory
+            fields = ('id','library', 'concept', 'title', 'directory_last_access')
 
-class SharedWithTagAndUserSerializer(serializers.ModelSerializer):
+class SharedWithTagAndUserWithDirectorySerializer(serializers.ModelSerializer):
     user = MiniUserSerializer(read_only=True)
     shared_tags = SharedTagSerializer(many=True)
+    directory = DirectorySerializer(read_only=True)
     class Meta:
         model = Shared
-        fields = ('id', 'user', 'shared_title', 'shared_content', 'shared_upload_datetime', 'shared_upload_datetime','shared_tags')
+        fields = ('id', 'user', 'directory', 'shared_title', 'shared_content', 'shared_upload_datetime', 'shared_tags', 'download_count')
 
 class LibrarySerializer(serializers.ModelSerializer):
     
@@ -52,21 +65,20 @@ class LibrarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Library
         fields = ('id', 'title', 'library_last_access')
-        
     
-    
-class DirectorySerializer(serializers.ModelSerializer):
-    
+
+class LibraryWithDirectorySerializer(serializers.ModelSerializer):
+    directories = SmallDirectorySerializer(many=True)
     class Meta:
-        model = Directory
-        fields = ('id','library', 'last_successed', 'concept', 'title', 'question_type')
-    
+        model = Library
+        fields = ('id', 'title', 'library_last_access', 'directories')
+        
 class QuestionSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Question
-        fields = ('directory', 'question_title', 'question_content', 'question_answer', 'question_explanation', 'question_type', 'is_scrapped', 'question_num')
-    
+        fields = ('directory', 'question_title', 'question_content', 'question_answer', 'question_explanation', 'question_type', 'is_scrapped', 'question_num')   
+
 class ChoiceSerializer(serializers.ModelSerializer):
     
     class Meta:

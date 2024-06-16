@@ -51,89 +51,44 @@ class Questions(BaseModel):
 @traceable
 def getQuestions(script, difficulty, multiple_choice, short_answer, ox_prob, all_prob):
 
-    gpt_model = "gpt-3.5-turbo-0125"
-    # gpt_model = "gpt-4"
+    #gpt_model = "gpt-3.5-turbo-0125"
+    gpt_model = "gpt-4"
     model = ChatOpenAI(model=gpt_model, openai_api_key=OPENAI_API_KEY, temperature=0).bind_tools([])
 
     prompt = ChatPromptTemplate.from_messages(
         [
             ("system", 
-            f"당신은 입력한 개념을 이해하고 주제를 파악하여 해당 주제와 관련된 문제를 생성해주는 알고리즘입니다."
+            f"당신은 입력한 개념을 이해하고 주제를 파악하여 해당 주제와 관련된 문제를 총 {multiple_choice+short_answer+ox_prob}개 생성해주는 알고리즘입니다."
             "output is in Korean"
-            "당신은 총 3가지 유형의 문제를 생성할 수 있어야 합니다. 문제 유형의 종류는 객관식 문제, 단답형 문제, OX 문제가 있습니다."
-            """
-            객관식 문제에 대해 설명하겠습니다.
-            객관식 문제는 4가지 선택지 제공하며, 사용자가 정답을 선택할 수 있습니다.
-            객관식 문제의 선택지의 번호는 1부터 4까지 제공됩니다.
-            question_answer는 반드시 1부터 4까지의 번호 중 하나로 설정되어야 합니다.
-            객관식 문제의 question_type은 1이 되어야 합니다.
-            """
-            """
-            단답형 문제에 대해 설명하겠습니다.
-            단답형 문제는 사용자가 질문에 대한 답을 짧게 작성할 수 있는 문제입니다.
-            단답형 문제의 question_answer는 2 어절 이하여야 합니다.
-            단답형 문제의 선택지 리스트는 반드시 빈 리스트가 되어야 합니다.
-            단답형 문제의 question_type은 2가 되어야 합니다.
-            """
-            """
-            OX 문제에 대해 설명하겠습니다.
-            OX 문제는 주어진 문장이 참인지 거짓인지 판단하는 문제입니다.
-            OX 문제의 문장의 끝은 '(O/X)'로 마무리되어야 합니다.
-            OX 문제의 제목은 반드시 참 거짓을 판단할 수 있는 문장으로 생성되어야 합니다.
-            몇 가지 예를 들어보겠습니다.  
-            question_title: 'UDP는 데이터의 신뢰성을 보장하지 않는다. (O/X)' valid: true    
-            question_title: 'TCP 프로토콜은 어떤 특징을 가지고 있나요? (O/X)' valid: false   question_title: 'RISC는 비교적 많은 수의 명령어를 가지고 있다. (O/X)' valid: true   question_title:'다중 버스 구조는 레지스터와 메모리 간의 데이터 전송을 어떻게 처리하는가? (O/X)', valid: false
-            OX 문제의 선택지 리스트는 반드시 빈 리스트가 되어야 합니다.
-            question_answer는 무조건 'O' 또는 'X'로 설정되어야 합니다.
-            몇 가지 예를 들어보겠습니다.
-            question_title:'간접 주소 모드에서는 명령어의 주소 필드가 가리키는 주소에는 유효주소가 있다. (O/X)',choices: [], question_answer: 'O'  question_title:'RISC는 비교적 많은 수의 명령어를 가지고 있다. (O/X)',choices: [], question_answer: 'X'
-            OX 문제의 question_type은 3이 되어야 합니다.
-            """
-            f"사용자가 입력한 개념입니다. {script}"
+            
+            "사용자의 개념을 입력받으면, 다음과 같은 과정을 반드시 거쳐야합니다."
+            "STEP 1: 사용자가 입력한 개념의 주제를 파악합니다."
+            "STEP 2: 이 주제 대해 당신이 알고있는 지식과, 개념 내용을 바탕으로 문제 생성을 준비합니다."
+            f"STEP 3: 객관식 문제를 {multiple_choice}개 생성합니다. 객관식 문제의 question_type는 반드시 1이 되어야 합니다. 객관식 문제는 반드시 4개의 선택지가 제공되어야 합니다."
+            f"STEP 4: 단답형 문제를 {short_answer}개 생성합니다. question_type는 반드시 2가 되어야 합니다. 단답형 문제를 생성할 때, 제공되는 선택지 리스트는 반드시 빈 리스트가 되어야 합니다. 또한, 단답형 문제에서는 정답을 반드시 2 어절 이하인 문제를 제공해야합니다." 
+            f"STEP 5: OX 문제를 {ox_prob}개 생성합니다. question_type는 반드시 3이 되어야 합니다.OX 문제는 개념과 관련된 문장이 문제 제목으로 주어지며, OX문제의 문장의 끝은 '(O/X)'로 마무리되어야 합니다. 제목은 반드시 참 거짓을 판단할 수 있는 문장으로 생성되어야 합니다. 몇 가지 예를 들어보겠습니다.  question_title: 'UDP는 데이터의 신뢰성을 보장하지 않는다. (O/X)' valid: true    question_title: 'TCP 프로토콜은 어떤 특징을 가지고 있나요? (O/X)' valid: false   question_title: 'RISC는 비교적 많은 수의 명령어를 가지고 있다. (O/X)' valid: true   question_title:'다중 버스 구조는 레지스터와 메모리 간의 데이터 전송을 어떻게 처리하는가? (O/X)', valid: false 제공되는 선택지 리스트는 반드시 빈 리스트가 되어야 합니다. 또한 question_answer는 무조건 'O' 또는 'X'로 설정되어야 합니다. 몇 가지 예를 들어보겠습니다. question_title:'간접 주소 모드에서는 명령어의 주소 필드가 가리키는 주소에는 유효주소가 있다. (O/X)',choices: [], question_answer: 'O'  question_title:'RISC는 비교적 많은 수의 명령어를 가지고 있다. (O/X)',choices: [], question_answer: 'X' 이와 같은 형식으로 문제를 생성해야 합니다."
+            "STEP 6: 생성한 문제에 대한 정답과 해설을 제공합니다."
             ), 
             #MessagesPlaceholder("examples"),
             ("user", "{input}")]
             
     )
     
-    questions = []
+    
     chain = prompt | model.with_structured_output(schema=Questions, method="function_calling", include_raw=False,) 
     try:
         with get_openai_callback() as cb:
-            if multiple_choice > 0:
-                res = chain.invoke({
+            res = chain.invoke({
                 "input": f''' 
-                    다음과 같은 STEP을 따라 문제를 생성합니다.
-                    STEP 1: 사용자가 입력한 개념의 주제를 파악합니다.
-                    STEP 2: 이 주제 대해 당신이 알고있는 지식과, 개념 내용을 바탕으로 문제 생성을 준비합니다.
-                    STEP 3: 객관식 문제를 {multiple_choice}개 생성합니다.
-                    STEP 4: 생성한 문제에 대한 정답과 해설을 제공합니다.
-                    ''',
+                개념: {script}, 
+                생성할 문제 수: {all_prob},
+                생성할 객관식 문제 수: {multiple_choice},
+                생성할 단답형 문제 수: {short_answer},
+                생성할 OX 문제 수: {ox_prob}
+                ''',
+                #"examples": messages,
                 })
-                questions = res.questions
-            if short_answer > 0:
-                res = chain.invoke({
-                "input": f''' 
-                    다음과 같은 STEP을 따라 문제를 생성합니다.
-                    STEP 1: 사용자가 입력한 개념의 주제를 파악합니다.
-                    STEP 2: 이 주제 대해 당신이 알고있는 지식과, 개념 내용을 바탕으로 문제 생성을 준비합니다.
-                    STEP 3: 단답형 문제를 {short_answer}개 생성합니다.
-                    STEP 4: 생성한 문제에 대한 정답과 해설을 제공합니다.
-                    ''',
-                })
-                questions.extend(res.questions)
-            if ox_prob > 0:
-                res = chain.invoke({
-                "input": f''' 
-                    다음과 같은 STEP을 따라 문제를 생성합니다.
-                    STEP 1: 사용자가 입력한 개념의 주제를 파악합니다.
-                    STEP 2: 이 주제 대해 당신이 알고있는 지식과, 개념 내용을 바탕으로 문제 생성을 준비합니다.
-                    STEP 3: OX 문제를 {ox_prob}개 생성합니다.
-                    STEP 4: 생성한 문제에 대한 정답과 해설을 제공합니다.
-                    ''',
-                })
-                questions.extend(res.questions)
-                
+                #print(res)
     except Exception as e:
         print(f"An error occurred: {e}")
         return None  # 혹은 오류에 대한 추가 정보를 포함한 오류 객체를 반환할 수 있습니다.
@@ -144,24 +99,34 @@ def getQuestions(script, difficulty, multiple_choice, short_answer, ox_prob, all
         
         # 결과 데이터가 기대한 형식을 따르는지 확인
 
+    def to_dict(obj):
+        if isinstance(obj, list):
+            return [to_dict(i) for i in obj]
+        elif hasattr(obj, "__dict__"):
+            return {key: to_dict(value) for key, value in obj.__dict__.items()}
+        else:
+            return obj
+
     # questions 리스트를 딕셔너리 리스트로 변환
     print(res)
     print("-----------------")
-    print(questions)
-    # JSON으로 변환
-    json_output = convert_pydantic_list_to_json(questions)
-    print("-----------------")
-    print(json_output) 
+    questions_dict = to_dict(res)
+
+    # 딕셔너리 리스트를 JSON 문자열로 변환
+    questions_json = json.dumps(questions_dict, ensure_ascii=False, indent=4)
+
     # 결과 출력
+    print(questions_json)
     print("-----------------")
     print(cb)
-    
+        
+    return questions_dict
 
-       
-    return json_output
 
-def convert_pydantic_list_to_json(pydantic_list: List[BaseModel]) -> str:
-    return [item.dict() for item in pydantic_list]
+
+
+
+
 concept1= '''
 	어플리케이션 레이어
 	네트워크 어플리케이션 원리
@@ -429,4 +394,4 @@ Immediate 모드
 컴파일러는 작지만 빠른 명령어를 사용
 
 '''
-#getQuestions(concept1, 7,0,0,10,10)
+getQuestions(concept4, 7, 4,3,3, 10)
