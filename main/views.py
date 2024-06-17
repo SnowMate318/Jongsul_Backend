@@ -344,7 +344,7 @@ class LibraryAPIView(views.APIView):
     def get(self, request):
         user = request.user
         ordering = request.query_params.get('ordering', '-library_last_access')
-        libraries = Library.objects.filter(user=user).order_by(ordering)    
+        libraries = Library.objects.filter(user=user, deleted=False).order_by(ordering)    
         
         
         serializer = LibraryWithDirectorySerializer(libraries, many=True)
@@ -402,7 +402,7 @@ class DirectoryAPIView(views.APIView):
             all_prob = request.data.get('all_prob')
             
             try:
-                questions = getQuestions(script, difficulty, multiple_choice, short_answer, ox_prob, all_prob)['questions']
+                questions = getQuestions(script, multiple_choice, short_answer, ox_prob)['questions']
                 if questions is None:
                     return Response({'message': 'GPT_API 관련 오류'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
                 
