@@ -83,9 +83,9 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.kakao',
-    #'allauth.socialaccount.providers.oauth2.client',
-    #app
-    'main',
+    'users',
+    'communities',
+    'questions',
 ]
 
 MIDDLEWARE = [
@@ -106,7 +106,7 @@ ROOT_URLCONF = 'jongsul.urls'
 
 WSGI_APPLICATION = 'jongsul.wsgi.application'
 
-AUTH_USER_MODEL = 'main.User'
+AUTH_USER_MODEL = 'users.User'
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
