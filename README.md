@@ -22,13 +22,16 @@ API 문서는 [여기](https://snowmate318.github.io/Jongsul_Backend/)에서 확
 Todo: 인증과정 설명
 
 ### 요청 별 설명
+
+### [인증](https://github.com/SnowMate318/Jongsul_Backend/blob/develop/users/views.py)
+
 #### RegisterAPIView
 #### AuthAPIView
 #### UserAPIView
 #### SocialAUthAPIView
 #### UserDeleteView
 
-### 문제 폴더 관리 및 문제 풀이
+### [문제 폴더 관리 및 문제 풀이](https://github.com/SnowMate318/Jongsul_Backend/blob/develop/questions/views.py)
 #### LibraryAPIView
 #### LibraryDetailAPIView
 #### DirectoryAPIView
@@ -40,7 +43,7 @@ Todo: 인증과정 설명
 #### QuestionSolveAPIView
 #### QuestionScrapAPIView
 
-### 게시글 및 공유문제
+### [게시글 및 공유문제](https://github.com/SnowMate318/Jongsul_Backend/blob/develop/communities/views.py)
 #### SharedAPIView
 #### SharedUserFilterAPIView
 #### SharedDetailAPIView
