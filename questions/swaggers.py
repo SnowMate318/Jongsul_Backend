@@ -5,7 +5,7 @@ from drf_yasg import openapi
 
 #library
 class LibraryInputSerializer(serializers.Serializer):
-    title = serializers.CharField(max_length=100, required=True)
+    title = serializers.CharField(max_length=30, required=True)
 
 library_requests = {
     'post': LibraryInputSerializer,
@@ -149,7 +149,8 @@ question_solve_response = {
 #question scrap
 class QuestionScrapSerializer(serializers.Serializer):
     is_scrapped = serializers.BooleanField(required=True)
-    dir_name = serializers.CharField(max_length=100, required=True)
+    lib_name = serializers.CharField(max_length=30, required=True)
+    dir_name = serializers.CharField(max_length=65, required=True)
     
 question_scrap_request = QuestionScrapSerializer
 question_scrap_response = {

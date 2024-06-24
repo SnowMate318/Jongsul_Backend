@@ -27,7 +27,15 @@ class LibraryAPIView(views.APIView):
         user = request.user
         if title == "":
             return Response({'message':'제목을 입력해야합니다'},status=status.HTTP_400_BAD_REQUEST)
-        library = Library.objects.create(user=user, title=title)
+        existing_cnt = 0
+        tmp_title = title
+        for lib in existing_library:
+            if lib.title == title:
+                if lib.title == tmp_title:
+                    existing_cnt += 1
+                    tmp_title = title+f"({existing_cnt})"
+                existing_cnt += 1
+        library = Library.objects.create(user=user, title=tmp_title)
         serializer = LibraryWithDirectorySerializer(library)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     @swagger_auto_schema(tags=["라이브러리 전체 조회"], responses=library_responses['get'], manual_parameters=header_param)
@@ -53,8 +61,17 @@ class LibraryDetailAPIView(views.APIView):
     def patch(self, request, library_id):
         user = request.user
         title = request.data.get('title')
+        existing_library = Library.objects.filter(user=user)
+        existing_cnt = 0
+        tmp_title = title
+        for lib in existing_library:
+            if lib.title == title:
+                if lib.title == tmp_title:
+                    existing_cnt += 1
+                    tmp_title = title+f"({existing_cnt})"
+                existing_cnt += 1
         library = get_object_or_404(Library, id=library_id)
-        library.title = title
+        library.title = tmp_title
         library.save()
         
         return Response({'message':'라이브러리 제목이 수정되었습니다'},status=status.HTTP_200_OK)
@@ -137,10 +154,6 @@ class DirectoryDetailAPIView(views.APIView):
         dir_title = request.data.get('title')
         if dir_title:
             directory.title = dir_title
-            
-        dir_concept = request.data.get('concept')
-        if dir_concept:
-            directory.concept = dir_concept
             
         directory.save()
         return Response({"message": "성공적으로 디렉토리 내용을 변경했습니다."}, status=status.HTTP_200_OK)
@@ -305,6 +318,9 @@ class QuestionScrapAPIView(views.APIView):
             is_scrapped = request.data.get('is_scrapped')
             if is_scrapped is None:
                 return Response({'message': '스크랩 여부를 입력해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
+            lib_name = request.data.get('lib_name')
+            if lib_name is None:
+                return Response({'message': '디렉토리 이름을 입력해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
             dir_name = request.data.get('dir_name')
             if dir_name is None:
                 return Response({'message': '디렉토리 이름을 입력해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -317,7 +333,7 @@ class QuestionScrapAPIView(views.APIView):
             
             if is_scrapped:
                 library, created = Library.objects.get_or_create(user=user, title="스크랩한 문제들")
-                directory, created = Directory.objects.get_or_create(user=user, library=library, title=dir_name)
+                directory, created = Directory.objects.get_or_create(user=user, library=library, title=f"{lib_name}/{dir_name}")
                 scrapped_question  = Question.objects.create(directory=directory, question_num=question.question_num, question_title=question.question_title, question_content=question.question_content, question_answer=question.question_answer, question_explanation=question.question_explanation, question_type=question.question_type, is_scrapped=True)
                 scrapped_choices = Choice.objects.filter(question=question)
                 for scrapped_choice in scrapped_choices:
@@ -325,6 +341,9 @@ class QuestionScrapAPIView(views.APIView):
             else: # 스크랩 취소
                 scrapped_question = Question.objects.get(directory=directory, question_num=question.question_num)
                 scrapped_question.delete()
+                scrapped_directory = Directory.objects.get(library=library, title=f"{lib_name}/{dir_name}")
+                if not scrapped_directory.questions.exists():
+                    scrapped_directory.delete()
         return Response({'message': '문제를 스크랩했습니다.'},status=status.HTTP_200_OK)          
 
 
