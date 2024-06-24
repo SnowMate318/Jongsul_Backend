@@ -1,0 +1,1250 @@
+---
+swagger: '2.0'
+info:
+  title: 문제톡톡 API
+  description: 문제톡톡 API 문서
+  version: v1
+host: 127.0.0.1:8000
+schemes:
+- http
+basePath: "/api"
+consumes:
+- application/json
+produces:
+- application/json
+securityDefinitions:
+  Basic:
+    type: basic
+security:
+- Basic: []
+paths:
+  "/auth/delete/":
+    delete:
+      operationId: auth_delete_delete
+      description: ''
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '204':
+          description: ''
+        '400':
+          description: 유효하지 않은 토큰입니다.
+        '401':
+          description: 토큰이 만료되었습니다.
+        '404':
+          description: 이미 비활성화된 계정이거나, 존재하지 않는 계정입니다.
+      tags:
+      - 회원탈퇴
+    parameters: []
+  "/auth/login/":
+    post:
+      operationId: auth_login_create
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          "$ref": "#/definitions/EmailPasswordInput"
+      responses:
+        '200':
+          description: ''
+          schema:
+            "$ref": "#/definitions/AuthOutput"
+        '400':
+          description: 요청하신 정보가 존재하지 않습니다.
+      tags:
+      - 로그인
+    parameters: []
+  "/auth/register/":
+    post:
+      operationId: auth_register_create
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          "$ref": "#/definitions/EmailPasswordInput"
+      responses:
+        '200':
+          description: ''
+          schema:
+            "$ref": "#/definitions/AuthOutput"
+        '500':
+          description: 유저 시리얼라이져 밸리디에이션 에러
+      tags:
+      - 회원가입
+    parameters: []
+  "/auth/social/":
+    post:
+      operationId: auth_social_create
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          "$ref": "#/definitions/SocialInput"
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            "$ref": "#/definitions/AuthOutput"
+        '400':
+          description: 요청하신 정보가 존재하지 않습니다.
+      tags:
+      - 소셜 로그인
+    parameters: []
+  "/auth/token/refresh/":
+    post:
+      operationId: auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          "$ref": "#/definitions/TokenRefresh"
+      responses:
+        '201':
+          description: ''
+          schema:
+            "$ref": "#/definitions/TokenRefresh"
+      tags:
+      - auth
+    parameters: []
+  "/auth/user/":
+    get:
+      operationId: auth_user_list
+      description: ''
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            "$ref": "#/definitions/User"
+        '400':
+          description: 사용 불가능한 토큰입니다.
+        '401':
+          description: 토큰이 만료되었습니다.
+      tags:
+      - 유저정보 조회
+    patch:
+      operationId: auth_user_partial_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          "$ref": "#/definitions/UserPatchInput"
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            "$ref": "#/definitions/User"
+        '400':
+          description: 수정할 내용이 없습니다.
+      tags:
+      - 유저정보 수정
+    parameters: []
+  "/directory/{directory_id}":
+    get:
+      operationId: directory_read
+      description: ''
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '200':
+          description: ''
+      tags:
+      - 디렉토리 상세 조회
+    patch:
+      operationId: directory_partial_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          "$ref": "#/definitions/DirectoryPatch"
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '200':
+          description: 성공적으로 디렉토리 내용을 변경했습니다.
+      tags:
+      - 디렉토리 수정
+    delete:
+      operationId: directory_delete
+      description: ''
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '200':
+          description: 디렉토리가 성공적으로 삭제되었습니다.
+      tags:
+      - 디렉토리 삭제
+    parameters:
+    - name: directory_id
+      in: path
+      required: true
+      type: string
+  "/directory/{directory_id}/change/":
+    patch:
+      operationId: directory_change_partial_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          "$ref": "#/definitions/DirectoryChange"
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            "$ref": "#/definitions/DirectoryChange"
+        '400':
+          description: 이동할 라이브러리가 없습니다. or 라이브러리 정보가 제공되지 않았습니다.
+      tags:
+      - 디렉토리 라이브러리 변경
+    parameters:
+    - name: directory_id
+      in: path
+      required: true
+      type: string
+  "/directory/{directory_id}/question/":
+    get:
+      operationId: directory_question_list
+      description: ''
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              "$ref": "#/definitions/QuestionAndChoice"
+      tags:
+      - 디렉토리 내 문제 전체 조회
+    parameters:
+    - name: directory_id
+      in: path
+      required: true
+      type: string
+  "/directory/{directory_id}/question/test/":
+    get:
+      operationId: directory_question_test_list
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+      - directory
+    parameters:
+    - name: directory_id
+      in: path
+      required: true
+      type: string
+  "/directory/{directory_id}/share/":
+    post:
+      operationId: directory_share_create
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          "$ref": "#/definitions/DirectoryShare"
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '201':
+          description: ''
+          schema:
+            "$ref": "#/definitions/DirectoryShare"
+      tags:
+      - 디렉토리 공유
+    parameters:
+    - name: directory_id
+      in: path
+      required: true
+      type: string
+  "/library/":
+    get:
+      operationId: library_list
+      description: ''
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              "$ref": "#/definitions/LibraryWithDirectory"
+      tags:
+      - 라이브러리 전체 조회
+    post:
+      operationId: library_create
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          "$ref": "#/definitions/LibraryInput"
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '201':
+          description: ''
+          schema:
+            "$ref": "#/definitions/LibraryInput"
+        '400':
+          description: 제목을 입력해야합니다.
+      tags:
+      - 라이브러리 생성
+    parameters: []
+  "/library/{library_id}":
+    get:
+      operationId: library_read
+      description: ''
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            "$ref": "#/definitions/LibraryWithDirectory"
+      tags:
+      - 라이브러리 상세 조회
+    patch:
+      operationId: library_partial_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          "$ref": "#/definitions/LibraryInput"
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            "$ref": "#/definitions/LibraryInput"
+      tags:
+      - 라이브러리 수정
+    delete:
+      operationId: library_delete
+      description: ''
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '204':
+          description: ''
+      tags:
+      - 라이브러리 삭제
+    parameters:
+    - name: library_id
+      in: path
+      required: true
+      type: string
+  "/library/{library_id}/directory/":
+    get:
+      operationId: library_directory_list
+      description: ''
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              "$ref": "#/definitions/Directory"
+      tags:
+      - 디렉토리 전체 조회
+    post:
+      operationId: library_directory_create
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          "$ref": "#/definitions/DirectoryCreate"
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '201':
+          description: ''
+          schema:
+            "$ref": "#/definitions/DirectoryCreate"
+        '400':
+          description: 제목을 입력해야합니다
+        '500':
+          description: GPT_API 관련 오류
+      tags:
+      - 디렉토리 생성
+    parameters:
+    - name: library_id
+      in: path
+      required: true
+      type: string
+  "/question/{question_id}":
+    get:
+      operationId: question_read
+      description: ''
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            "$ref": "#/definitions/QuestionAndChoice"
+      tags:
+      - 문제 상세 조회
+    patch:
+      operationId: question_partial_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          "$ref": "#/definitions/QuestionPatch"
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            "$ref": "#/definitions/QuestionPatch"
+      tags:
+      - 문제 수정
+    delete:
+      operationId: question_delete
+      description: ''
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '204':
+          description: ''
+        '404':
+          description: 문제를 찾을 수 없습니다.
+      tags:
+      - 문제 삭제
+    parameters:
+    - name: question_id
+      in: path
+      required: true
+      type: string
+  "/question/{question_id}/scrap/":
+    patch:
+      operationId: question_scrap_partial_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          "$ref": "#/definitions/QuestionScrap"
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            "$ref": "#/definitions/QuestionScrap"
+        '400':
+          description: 스크랩 여부를 입력해주세요. or 디렉토리 이름을 입력해주세요.
+      tags:
+      - 문제 스크랩
+    parameters:
+    - name: question_id
+      in: path
+      required: true
+      type: string
+  "/question/{question_id}/solve/":
+    patch:
+      operationId: question_solve_partial_update
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+      - 디렉토리 내 문제 전체 풀이
+    parameters:
+    - name: question_id
+      in: path
+      required: true
+      type: string
+  "/shared/":
+    get:
+      operationId: shared_list
+      description: ''
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              "$ref": "#/definitions/SharedWithTagAndUserWithDirectory"
+      tags:
+      - 커뮤니티 전체 조회
+    parameters: []
+  "/shared/{shared_id}":
+    get:
+      operationId: shared_read
+      description: ''
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            "$ref": "#/definitions/SharedWithTagAndUserWithDirectory"
+      tags:
+      - 커뮤니티 상세 조회
+    patch:
+      operationId: shared_partial_update
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          "$ref": "#/definitions/SharedsPatch"
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            "$ref": "#/definitions/SharedsPatch"
+      tags:
+      - 커뮤니티 자료 수정
+    delete:
+      operationId: shared_delete
+      description: ''
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '204':
+          description: ''
+      tags:
+      - 커뮤니티 자료 삭제
+    parameters:
+    - name: shared_id
+      in: path
+      required: true
+      type: string
+  "/shared/{shared_id}/download/":
+    post:
+      operationId: shared_download_create
+      description: ''
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '201':
+          description: ''
+      tags:
+      - 커뮤니티 자료 다운로드
+    parameters:
+    - name: shared_id
+      in: path
+      required: true
+      type: string
+  "/user/{uuid}/shared":
+    get:
+      operationId: user_shared_list
+      description: ''
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer %Your Access Token%
+        type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              "$ref": "#/definitions/SharedWithTagAndUserWithDirectory"
+      tags:
+      - 내가 올린 커뮤니티 조회
+    parameters:
+    - name: uuid
+      in: path
+      required: true
+      type: string
+definitions:
+  EmailPasswordInput:
+    required:
+    - email
+    - password
+    type: object
+    properties:
+      email:
+        title: Email
+        type: string
+        format: email
+        minLength: 1
+      password:
+        title: Password
+        type: string
+        minLength: 1
+  AuthOutput:
+    required:
+    - user
+    - message
+    - token
+    type: object
+    properties:
+      user:
+        title: User
+        type: object
+        additionalProperties:
+          type: string
+          x-nullable: true
+      message:
+        title: Message
+        type: string
+        minLength: 1
+      token:
+        title: Token
+        type: object
+        additionalProperties:
+          type: string
+          x-nullable: true
+  SocialInput:
+    required:
+    - provider_type
+    - provider_id
+    type: object
+    properties:
+      provider_type:
+        title: Provider type
+        type: string
+        maxLength: 30
+        minLength: 1
+      provider_id:
+        title: Provider id
+        type: string
+        maxLength: 100
+        minLength: 1
+      email:
+        title: Email
+        type: string
+        format: email
+        minLength: 1
+      user_name:
+        title: User name
+        type: string
+        minLength: 1
+  TokenRefresh:
+    required:
+    - refresh
+    type: object
+    properties:
+      refresh:
+        title: Refresh
+        type: string
+        minLength: 1
+      access:
+        title: Access
+        type: string
+        readOnly: true
+        minLength: 1
+  User:
+    required:
+    - password
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      password:
+        title: 비밀번호
+        type: string
+        maxLength: 128
+        minLength: 1
+      last_login:
+        title: 마지막 로그인
+        type: string
+        format: date-time
+        x-nullable: true
+      uuid:
+        title: Uuid
+        type: string
+        format: uuid
+        readOnly: true
+      email:
+        title: Email
+        type: string
+        format: email
+        maxLength: 50
+        minLength: 1
+        x-nullable: true
+      is_superuser:
+        title: Is superuser
+        type: boolean
+      is_active:
+        title: Is active
+        type: boolean
+      is_staff:
+        title: Is staff
+        type: boolean
+      created_at:
+        title: Created at
+        type: string
+        format: date-time
+        readOnly: true
+      updated_at:
+        title: Updated at
+        type: string
+        format: date-time
+        readOnly: true
+      user_name:
+        title: User name
+        type: string
+        maxLength: 30
+      profile:
+        title: Profile
+        type: string
+        readOnly: true
+        x-nullable: true
+        format: uri
+      groups:
+        description: 이 사용자가 속한 그룹. 사용자는 그룹에 부여된 모든 권한을 물려 받습니다.
+        type: array
+        items:
+          title: 그룹
+          description: 이 사용자가 속한 그룹. 사용자는 그룹에 부여된 모든 권한을 물려 받습니다.
+          type: integer
+        uniqueItems: true
+      user_permissions:
+        description: 이 사용자를 위한 특정 권한.
+        type: array
+        items:
+          title: 사용자 권한
+          description: 이 사용자를 위한 특정 권한.
+          type: integer
+        uniqueItems: true
+  UserPatchInput:
+    type: object
+    properties:
+      user_name:
+        title: User name
+        type: string
+        maxLength: 30
+        minLength: 1
+      profile:
+        title: Profile
+        type: string
+        readOnly: true
+        format: uri
+  DirectoryPatch:
+    type: object
+    properties:
+      title:
+        title: Title
+        type: string
+        maxLength: 100
+        minLength: 1
+      concept:
+        title: Concept
+        type: string
+        maxLength: 8000
+        minLength: 1
+  DirectoryChange:
+    required:
+    - library_id
+    - new_library_title
+    type: object
+    properties:
+      library_id:
+        title: Library id
+        type: integer
+      new_library_title:
+        title: New library title
+        type: string
+        maxLength: 30
+        minLength: 1
+  Choice:
+    required:
+    - choice_num
+    - choice_content
+    type: object
+    properties:
+      choice_num:
+        title: Choice num
+        type: integer
+        maximum: 2147483647
+        minimum: -2147483648
+      choice_content:
+        title: Choice content
+        type: string
+        maxLength: 200
+        minLength: 1
+  QuestionAndChoice:
+    required:
+    - choices
+    - directory
+    - question_title
+    - question_answer
+    - question_explanation
+    - question_type
+    - question_num
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      choices:
+        type: array
+        items:
+          "$ref": "#/definitions/Choice"
+      directory:
+        title: Directory
+        type: integer
+      question_title:
+        title: Question title
+        type: string
+        maxLength: 1000
+        minLength: 1
+      question_content:
+        title: Question content
+        type: string
+        maxLength: 2000
+        x-nullable: true
+      question_answer:
+        title: Question answer
+        type: string
+        maxLength: 200
+        minLength: 1
+      question_explanation:
+        title: Question explanation
+        type: string
+        maxLength: 2000
+        minLength: 1
+      question_type:
+        title: Question type
+        type: integer
+        maximum: 2147483647
+        minimum: -2147483648
+      is_scrapped:
+        title: Is scrapped
+        type: boolean
+      question_num:
+        title: Question num
+        type: integer
+        maximum: 2147483647
+        minimum: -2147483648
+  DirectoryShare:
+    required:
+    - shared_title
+    - shared_content
+    type: object
+    properties:
+      shared_title:
+        title: Shared title
+        type: string
+        maxLength: 100
+        minLength: 1
+      shared_content:
+        title: Shared content
+        type: string
+        maxLength: 2000
+        minLength: 1
+      shared_tags:
+        type: array
+        items:
+          type: string
+          maxLength: 30
+          minLength: 1
+  SmallDirectory:
+    required:
+    - library
+    - concept
+    - title
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      library:
+        title: Library
+        type: integer
+      concept:
+        title: Concept
+        type: string
+        maxLength: 8000
+        minLength: 1
+      title:
+        title: Title
+        type: string
+        maxLength: 100
+        minLength: 1
+      directory_last_access:
+        title: Directory last access
+        type: string
+        format: date-time
+        readOnly: true
+  LibraryWithDirectory:
+    required:
+    - title
+    - directories
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      title:
+        title: Title
+        type: string
+        maxLength: 30
+        minLength: 1
+      library_last_access:
+        title: Library last access
+        type: string
+        format: date-time
+        readOnly: true
+      directories:
+        type: array
+        items:
+          "$ref": "#/definitions/SmallDirectory"
+  LibraryInput:
+    required:
+    - title
+    type: object
+    properties:
+      title:
+        title: Title
+        type: string
+        maxLength: 100
+        minLength: 1
+  Directory:
+    required:
+    - library
+    - concept
+    - title
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      library:
+        title: Library
+        type: integer
+      last_successed:
+        title: Last successed
+        type: integer
+        maximum: 2147483647
+        minimum: -2147483648
+        x-nullable: true
+      concept:
+        title: Concept
+        type: string
+        maxLength: 8000
+        minLength: 1
+      title:
+        title: Title
+        type: string
+        maxLength: 100
+        minLength: 1
+      directory_last_access:
+        title: Directory last access
+        type: string
+        format: date-time
+        readOnly: true
+      is_scrap_directory:
+        title: Is scrap directory
+        type: boolean
+      is_deleted:
+        title: Is deleted
+        type: boolean
+  DirectoryCreate:
+    required:
+    - title
+    - concept
+    - difficulty
+    - multiple_choice
+    - short_answer
+    - ox_prob
+    type: object
+    properties:
+      title:
+        title: Title
+        type: string
+        maxLength: 100
+        minLength: 1
+      concept:
+        title: Concept
+        type: string
+        maxLength: 8000
+        minLength: 1
+      difficulty:
+        title: Difficulty
+        type: integer
+      multiple_choice:
+        title: Multiple choice
+        type: integer
+      short_answer:
+        title: Short answer
+        type: integer
+      ox_prob:
+        title: Ox prob
+        type: integer
+  ChoicePatch:
+    required:
+    - choice_num
+    - choice_content
+    type: object
+    properties:
+      choice_num:
+        title: Choice num
+        type: integer
+      choice_content:
+        title: Choice content
+        type: string
+        maxLength: 200
+        minLength: 1
+  QuestionPatch:
+    type: object
+    properties:
+      question_title:
+        title: Question title
+        type: string
+        maxLength: 1000
+        minLength: 1
+      question_content:
+        title: Question content
+        type: string
+        maxLength: 2000
+        minLength: 1
+      question_answer:
+        title: Question answer
+        type: string
+        maxLength: 200
+        minLength: 1
+      question_explanation:
+        title: Question explanation
+        type: string
+        maxLength: 2000
+        minLength: 1
+      choices:
+        type: array
+        items:
+          "$ref": "#/definitions/ChoicePatch"
+  QuestionScrap:
+    required:
+    - is_scrapped
+    - dir_name
+    type: object
+    properties:
+      is_scrapped:
+        title: Is scrapped
+        type: boolean
+      dir_name:
+        title: Dir name
+        type: string
+        maxLength: 100
+        minLength: 1
+  MiniUser:
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      email:
+        title: Email
+        type: string
+        format: email
+        maxLength: 50
+        minLength: 1
+        x-nullable: true
+      user_name:
+        title: User name
+        type: string
+        maxLength: 30
+      profile:
+        title: Profile
+        type: string
+        readOnly: true
+        x-nullable: true
+        format: uri
+  SharedTag:
+    required:
+    - shared
+    - name
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      shared:
+        title: Shared
+        type: integer
+      name:
+        title: Name
+        type: string
+        maxLength: 30
+        minLength: 1
+  SharedWithTagAndUserWithDirectory:
+    required:
+    - shared_title
+    - shared_content
+    - shared_tags
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      user:
+        "$ref": "#/definitions/MiniUser"
+      directory:
+        "$ref": "#/definitions/Directory"
+      shared_title:
+        title: Shared title
+        type: string
+        maxLength: 100
+        minLength: 1
+      shared_content:
+        title: Shared content
+        type: string
+        maxLength: 2000
+        minLength: 1
+      shared_upload_datetime:
+        title: Shared upload datetime
+        type: string
+        format: date-time
+        readOnly: true
+      shared_tags:
+        type: array
+        items:
+          "$ref": "#/definitions/SharedTag"
+      download_count:
+        title: Download count
+        type: integer
+        maximum: 2147483647
+        minimum: -2147483648
+  TagsPatch:
+    type: object
+    properties:
+      tag_title:
+        title: Tag title
+        type: string
+        maxLength: 100
+        minLength: 1
+  SharedsPatch:
+    type: object
+    properties:
+      shared_title:
+        title: Shared title
+        type: string
+        maxLength: 100
+        minLength: 1
+      shared_content:
+        title: Shared content
+        type: string
+        maxLength: 8000
+        minLength: 1
+      shared_tags:
+        type: array
+        items:
+          "$ref": "#/definitions/TagsPatch"

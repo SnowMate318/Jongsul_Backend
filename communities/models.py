@@ -4,8 +4,8 @@ from questions.models import Directory
 
 class Shared(models.Model):
     user = models.ForeignKey(User,related_name = 'shareds', on_delete=models.CASCADE)
-    shared_title = models.CharField(max_length=30)
-    shared_content = models.CharField(max_length=500)
+    shared_title = models.CharField(max_length=100)
+    shared_content = models.CharField(max_length=2000)
     shared_upload_datetime = models.DateTimeField(auto_now_add=True)
     is_activated = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)

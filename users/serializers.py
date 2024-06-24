@@ -1,6 +1,6 @@
 from .models import User, WebProvider
 from rest_framework import serializers
-
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 # Serializers define the API representation.
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,3 +26,5 @@ class WebProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = WebProvider
         fields = ('id', 'user', 'provider_type', 'provider_id')
+
+#swagger

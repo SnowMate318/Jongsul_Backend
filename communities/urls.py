@@ -16,7 +16,6 @@ urlpatterns =[
     path('', include(router.urls)),
     path("user/<str:uuid>/shared", SharedUserFilteredAPIView.as_view()),
     path("shared/", SharedAPIView.as_view()),
-    path("shared/<int:shared_id>/",SharedDetailAPIView.as_view()),
     path("shared/<int:shared_id>",SharedDetailAPIView.as_view()),
     path("shared/<int:shared_id>/download/",SharedDownloadAPIView.as_view()),
     

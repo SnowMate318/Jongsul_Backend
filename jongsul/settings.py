@@ -31,6 +31,11 @@ APPEND_SLASH=False
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
+#swagger 세팅
+SWAGGER_SETTINGS = {
+   'USE_SESSION_AUTH': False
+}
+
 # .env 파일의 경로를 지정 (경로가 다를 수 있으니 확인 필요)
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
 load_dotenv(dotenv_path)
@@ -39,7 +44,7 @@ load_dotenv(dotenv_path)
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['13.210.178.148']
 
@@ -83,9 +88,12 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.kakao',
-    'users',
+    # my apps
     'communities',
+    'users',
     'questions',
+    #swagger
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [

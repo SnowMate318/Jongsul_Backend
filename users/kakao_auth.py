@@ -12,7 +12,7 @@ from rest_framework.renderers import JSONRenderer
 #BASE_URL = 'http://127.0.0.1:8000'
 
 BASE_URL = 'http://13.210.178.148:80'
-KAKAO_CALLBACK_URI = BASE_URL + '/api/kakao/login/callback'
+KAKAO_CALLBACK_URI = BASE_URL + '/auth/social/web/kakao/callback'
 
 # 인가코드 받기
 def kakao_login(request): 

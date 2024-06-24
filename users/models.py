@@ -49,7 +49,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class WebProvider(models.Model):
     user = models.ForeignKey(User, related_name="web_provider", on_delete=models.CASCADE, to_field='uuid')
-    provider_type = models.CharField(max_length=10)
+    provider_type = models.CharField(max_length=30)
     provider_id = models.CharField(max_length=100)
     
     class Meta:
