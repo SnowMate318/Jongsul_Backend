@@ -5,18 +5,16 @@ from rest_framework import views
 from rest_framework.filters import OrderingFilter
 from .models import SharedTag, Shared
 from .serializers import SharedOnlySerializer, SharedTagSerializer, SharedWithTagAndUserWithDirectorySerializer
+from .swaggers import header_param, shared_requests_query_param, shared_requests, shared_responses, shared_detail_requests, shared_detail_responses
 from rest_framework import status
 from rest_framework.response import Response
 from django.shortcuts import render, get_object_or_404
 from django.db import transaction
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly  # 인증된 사용자만 접근 허용
+from drf_yasg.utils import swagger_auto_schema
 
-# /register/, post(회원가입)
-
-
-# /shared/, get(커뮤니티 조회)    
 class SharedAPIView(views.APIView):
-      # 기본 정렬 순서    
+    @swagger_auto_schema(tags=["커뮤니티 전체 조회"], query_serializer=shared_requests['get'], responses=shared_responses['get'], manual_parameters=header_param)
     def get(self, request):
         tags = request.query_params.get('tags', None)
         user = request.query_params.get('user', None)
@@ -43,8 +41,8 @@ class SharedAPIView(views.APIView):
         serializer = SharedWithTagAndUserWithDirectorySerializer(shareds, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-# 내가 올린 커뮤니티 조회, TODO: 삭제   
-class SharedUserFilteredAPIView(views.APIView):  
+class SharedUserFilteredAPIView(views.APIView):
+    @swagger_auto_schema(tags=["내가 올린 커뮤니티 조회"], responses=shared_responses['get'], manual_parameters=header_param)  
     def get(self, request):
         permission_classes = [IsAuthenticated]
         # request.user를 사용하여 현재 인증된 사용자 객체를 가져옴
@@ -57,14 +55,15 @@ class SharedUserFilteredAPIView(views.APIView):
         
         return Response(serializer.data, status=status.HTTP_200_OK)
                 
-# /shared/<int:shared_id>/ , get(커뮤니티 상세 조회), put(커뮤니티 자료 다운로드), delete(커뮤니티 자료 삭제)
 class SharedDetailAPIView(views.APIView):
     permission_classes = [IsAuthenticated]
+    @swagger_auto_schema(tags=["커뮤니티 상세 조회"], responses=shared_detail_responses['get'], manual_parameters=header_param)
     def get(self, request, shared_id):
         shared = get_object_or_404(Shared, id=shared_id, is_deleted=False)
         
         serializer = SharedWithTagAndUserWithDirectorySerializer(shared) 
         return Response(serializer.data, status=status.HTTP_200_OK)
+    @swagger_auto_schema(tags=["커뮤니티 자료 수정"], request_body=shared_detail_requests['patch'], manual_parameters=header_param)
     def patch(self, request, shared_id):
         with transaction.atomic():
             new_title = request.data.get('shared_title')
@@ -72,14 +71,19 @@ class SharedDetailAPIView(views.APIView):
             new_tags = request.data['shared_tags']
             user = request.user
             shared = get_object_or_404(Shared, id=shared_id, user=user, is_deleted=False)
-            shared.shared_title = new_title
-            shared.shared_content = new_content
+            
+            if new_title:
+                shared.shared_title = new_title
+            if new_content:
+                shared.shared_content = new_content
             shared.save()
             shared_tags = SharedTag.objects.filter(shared=shared).delete()
-            for new_tag in new_tags:
-                new_name = new_tag['name']                
-                SharedTag.objects.create(shared=shared, name=new_name) 
+            if new_tags:
+                for new_tag in new_tags:
+                    new_name = new_tag['tag_title']                
+                    SharedTag.objects.create(shared=shared, name=new_name) 
         return Response({"message": "성공적으로 수정되었습니다"},status=status.HTTP_200_OK)   
+    @swagger_auto_schema(tags=["커뮤니티 자료 삭제"], manual_parameters=header_param)
     def delete(self, request, shared_id):
         shared = get_object_or_404(Shared, id=shared_id, is_deleted=False)
         shared.is_deleted = True
@@ -87,6 +91,7 @@ class SharedDetailAPIView(views.APIView):
         return Response({"message": "성공적으로 삭제되었습니다."}, status=status.HTTP_200_OK)     
 
 class SharedDownloadAPIView(views.APIView):
+    @swagger_auto_schema(tags=["커뮤니티 자료 다운로드"], manual_parameters=header_param)
     def post(self, request, shared_id):
         try:
             with transaction.atomic():

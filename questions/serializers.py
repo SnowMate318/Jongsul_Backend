@@ -26,7 +26,7 @@ class DirectorySerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Directory
-        fields = ('id','library', 'last_successed', 'concept', 'title', 'question_type')
+        fields = ('id','library', 'last_successed', 'concept', 'title', 'directory_last_access', 'is_scrap_directory', 'is_deleted')
              
 class QuestionSerializer(serializers.ModelSerializer):
     
@@ -47,3 +47,5 @@ class QuestionAndChoiceSerializer(serializers.ModelSerializer):
         model = Question
         fields = ('id','choices','directory', 'question_title', 'question_content', 'question_answer', 'question_explanation', 'question_type', 'is_scrapped', 'question_num')
         
+        
+
