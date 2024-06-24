@@ -164,7 +164,7 @@ class SocialAuthAPIView(views.APIView):
                 status=status.HTTP_200_OK,
             )    
 
-class UserDeleteView(views.APIView):
+class UserDeleteAPIView(views.APIView):
     @swagger_auto_schema(tags=["회원탈퇴"], responses=user_delete_response, manual_parameters=header_param)
     def delete(self, request):
         try:

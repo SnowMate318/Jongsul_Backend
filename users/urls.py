@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .views import RegisterAPIView, UserAPIView, AuthAPIView, UserDeleteView, SocialAuthAPIView
+from .views import RegisterAPIView, UserAPIView, AuthAPIView, UserDeleteVPIView, SocialAuthAPIView
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenRefreshView
 from .kakao_auth import kakao_login, kakao_callback
@@ -23,5 +23,5 @@ urlpatterns =[
     path("social/", SocialAuthAPIView.as_view()),
     path('social/web/kakao', kakao_login, name='kakao_login'),
     path('social/web/kakao/callback', kakao_callback, name='kakao_callback'),
-    path("delete/", UserDeleteView.as_view()),
+    path("delete/", UserDeleteAPIView.as_view()),
 ]
