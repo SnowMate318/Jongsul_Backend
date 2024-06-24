@@ -11,8 +11,6 @@ myDATABASES = {
 		}
 }
 
-OPENAI_API_KEY = "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"
-
 SOCIALACCOUNT_PROVIDERS = {
     'kakao': {
         'APP': {
