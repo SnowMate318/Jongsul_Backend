@@ -1,4 +1,4 @@
-# jongsul_backend
+# QuestionTokTok_Server
 
 ## API 문서
 _API 문서는 [여기](https://snowmate318.github.io/Jongsul_Backend/)에서 확인할 수 있습니다._
