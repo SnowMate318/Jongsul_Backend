@@ -1,7 +1,7 @@
 # QuestionTokTok_Server
 
 ## API 문서
-_API 문서는 [여기](https://snowmate318.github.io/QuestionTokTok_Server/)에서 확인할 수 있습니다._
+_API 문서는 [여기](https://snowmate318.github.io/Quiz_Tok_Tok_Server/)에서 확인할 수 있습니다._
 
 # 개요
 jongsul_backend은 다음과 같은 기능을 제공하는 프로젝트입니다.
