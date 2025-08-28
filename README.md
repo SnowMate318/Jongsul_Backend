@@ -59,11 +59,16 @@ jongsul_backend은 다음과 같은 기능을 제공하는 프로젝트입니다
 
 # 기능 별
 ## 인증 및 로그인
+---
 ![종설-페이지-3 drawio (2)](https://github.com/SnowMate318/Jongsul_Backend/assets/108775585/f47db2e0-7b6a-43ab-9d48-0fdc7484064f)
+---
 ![종설-페이지-4 drawio](https://github.com/SnowMate318/Jongsul_Backend/assets/108775585/8bec7b0e-abaf-4ff1-b538-925a8ca773a0)
+---
 ![종설-페이지-5 drawio](https://github.com/SnowMate318/Jongsul_Backend/assets/108775585/aaaa0082-f26e-4314-bbcf-a2bd85bb2517)
+---
 ![종설-페이지-6 drawio](https://github.com/SnowMate318/Jongsul_Backend/assets/108775585/a2eab2c4-7219-4602-8489-3bb6fce4701a)
-Todo: 인증과정 설명
+---
+
 
 # 요청 별 설명
 
